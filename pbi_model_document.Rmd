@@ -1,5 +1,5 @@
 ---
-title: "IQVIA AU Analytical Data Model Design Consideration"
+title: "IQVIA AU Analytical Semantic Data Model Design Consideration"
 author: 
   - "Steven Wang"
   - "IQVIA AU Data Science"

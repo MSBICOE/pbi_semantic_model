@@ -1,0 +1,125 @@
+---
+title: "IQVIA AU Analytical Semantic Data Model Design Consideration"
+description: |
+  The conceptual design guide for IQVIA AU unified data model design
+author:
+  - name: Steven Wang
+  - name: Jun Bai
+date: "`r Sys.Date()`"
+output: 
+  distill::distill_article:
+    toc: true
+      
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Introduction
+
+In order to meet the increasingly internal and external demanding on the self-analytic capability, AU DS team is assigned to design a semantic data model to meet this requirement.
+
+While the initial request is based on the Bayer Consumer health sub-state data requirements, the design concept is aiming for both internal and all external client use. With this in mind, an overarching consideration of the model to meet all needs is enforced in the designing stage.
+
+
+# Conceptual Data Modelling
+
+Given that many clients share same IQVIA product master table and same retail pharmacy stores, a single physical source analytic data warehouse will be adopted instead of each client having its own database.
+
+### The Data Model Overall Usage Flow 
+
+Only one centralized analytic data mart will be created. A set of identical views will be used for each different client which only relevant to the client's subscription.
+
+A standardized yet also customizable parameter-driven Power BI data model will be designed as template. 
+
+Each client will use its views to feed into the Power BI data model to create its own Power BI workbook.
+
+Each client's Power BI workbook will be published to its own Power BI Premium workspace.
+
+```{r modelflow, fig.cap="Data model usage flowchart", fig.height=8, fig.width=8}
+library(DiagrammeR)
+mermaid("
+    graph TB
+    C(Centrlized Single DB)-- Create -->V1[Client 1 Views]
+    C-- Create -->V2[Client 2 Views]
+    C-- Create -->V4[IQVIA Views]
+    V1-- Feed Data -->P(PBI Master Model)
+    V2-- Feed Data -->P
+    V4-- Feed Data -->P
+    P-- Apply Model -->M1[Client 1 PBI]
+    P-- Apply Model -->M2[Client 2 PBI]
+    P-- Apply Model -->M4[IQVIA PBI]
+    M1-- Publish to -->W1[Client 1 Workspace]
+    M2-- Publish to -->W2[Client 2 Workspace]
+    M4-- Publish to -->W4[IQVIA Workspace]
+    W1-- Embedded in -->Mi(MiPortal)
+    W2-- Embedded in -->Mi
+    W4-- Embedded in -->Mi
+    W1-. Analysing in .->U(User Tools On Premise)
+    W2-. Analysing in .->U
+    W4-. Analysing in .->U
+    style C fill:#00b300,stroke:#333,stroke-width:4px;
+    style Mi fill:#00b300,stroke:#333,stroke-width:4px;
+    style P fill:#1aff1a,stroke:#333,stroke-width:2px;
+    style V4 fill:#E59925;
+    style M4 fill:#E59925;
+    style W4 fill:#E59925;
+    style U fill:#F1EA0E,stroke:#333,stroke-width:4px;
+    ", height = 500, width = 700)
+```
+
+
+### Data Model Conceptual ERD
+
+The conceptual ERD for the data model is proposed as the below Figure \@ref(fig:dmodel)
+
+```{r dmodel, fig.cap="Data model design conceptual ERD"}
+
+knitr::include_graphics("image/pbi_erd_banner_state_2.svg")
+
+```
+
+As Figure \@ref(fig:dmodel) shows, the model is mainly a star schema design. At brick level, we only have 1 fact table to hold the fact data. Since the fact table needs to accommodate not only the retail pharmacy data but also the Grocery and other datasets. This simplified fact table design will make some burden at the ETL side. Particularly, when some data sources which don't have same granular of data at brick or banner level, we will need a way to nominate a brick or banner to hold the upper level fact data.
+
+
+Even though that a client is not supposed to view the store level data, a store level fact table is indeed also designed for 3 purpose:
+
+1) to be used for the dynamic store distribution calculation;
+2) to be made available for internal users;
+3) When a client is subscribed to the probe data for Sellin;
+
+There is no additional fact table to hold the CBG data. CBG metrics will be controlled by DAX by using context understanding the geographic level and banner selection.
+
+
+
+
+```{r}
+
+library(htmltools)
+library(flextable)
+ft <- flextable(head(iris))
+tab_list <- list()
+for(i in 1:3){
+  tab_list[[i]] <- tagList(
+    tags$h3(paste0("iteration ", i)),
+    tags$p("JUst for the test pupose"),
+    htmltools_value(ft)
+  )
+}
+tagList(tab_list)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
