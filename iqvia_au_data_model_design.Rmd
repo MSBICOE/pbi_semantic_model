@@ -1,19 +1,54 @@
 ---
 title: "IQVIA AU Analytical Semantic Data Model Design Consideration"
 description: |
-  The conceptual design guide for IQVIA AU unified data model design
+  The guide for IQVIA AU unified data model design
 author:
   - name: Steven Wang
+    affiliation: AU Data Science
   - name: Jun Bai
+    affiliation: AU Data Science
 date: "`r Sys.Date()`"
 output: 
   distill::distill_article:
     toc: true
+    self_contained: yes
       
 ---
 
+<style type="text/css">
+
+  h2 {
+  font-size: 12px;
+  font-weight: normal
+  font-family: Sans-serif;
+  }
+
+</style>
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+library(kableExtra)
+library(formattable)
+### SQL connection
+library(odbc)
+drv <- odbc::odbc()
+connection <-  paste0("Driver={SQL Server Native Client 11.0};",    # Drivers
+                      "Server=sydssql162d;", # Server Address
+                      "Database=Product_Customization;", # Database Name
+                      "Trusted_Connection=yes;")
+
+con_odbc <- dbConnect(drv,
+                      .connection_string = connection, encoding = "latin1")
+
+connection_iqvia <-  paste0("Driver={SQL Server Native Client 11.0};",    # Drivers
+                      "Server=SQLETL02D.INT.MIPORTAL.COM;", # Server Address
+                      "Database=iqviaau_reporting_db;", # Database Name
+                      "Trusted_Connection=yes;")
+
+con_odbc_iqvia <- dbConnect(drv,
+                      .connection_string = connection_iqvia, encoding = "latin1")
+
 ```
 
 # Introduction
@@ -76,7 +111,7 @@ The conceptual ERD for the data model is proposed as the below Figure \@ref(fig:
 
 ```{r dmodel, fig.cap="Data model design conceptual ERD"}
 
-knitr::include_graphics("image/pbi_erd_banner_state_2.svg")
+knitr::include_graphics("image/pbi_erd_banner_state_3.svg")
 
 ```
 
@@ -91,25 +126,392 @@ Even though that a client is not supposed to view the store level data, a store 
 
 There is no additional fact table to hold the CBG data. CBG metrics will be controlled by DAX by using context understanding the geographic level and banner selection.
 
+# Reference Table Considerations
+
+## IQVIA Product Master Dimension Table
+
+IQVIA AU product master table which sourced from `warehousedata_pos_dim_product_parquet` table from BDF has more than 170 attributes. Many attributes in this master table are not interested by AU clients, particularly when it is consumer health concerned. Since the current main focus of this project is consumer healthy, most ethical related attributes are not considered for importing into the model.
+
+### IQVIA Product Master Further Cleaning Up
+
+The product master from BDF has still few attributes conflicting and some fundamental key indicator has not presented, like there is no simple flag to filter out the consumer health products.
+
+In addition, that at the time of this writing which is 10th July 2020, there roughly about 4500 consumer products which have NEC classification but they don't have CHC classification. In contrast, there are also about 4500 products which have CHC code but it don't have NEC codes.
+
+For the light PFC products, due to the nature of meaning of light PFC, the vast majority of attributes are not populated. However, some attributes which are indeed available based on other available information which are also not populated, like 
+
+While for the master table, ideally all the changes are better fixed at the source, for the completeness of the data modelling, DS team has done some further clean-up for the master product table.
+
+1. For the light PFC products, based on the field `pharml_mfr_co_lng_nm`, we derived and filled 2 more columns: `pharml_mfr_co_abrv_cd`, and `pharml_mfr_co_short_nm`
+
+2. For those `pharml_mfr_co_lng_nm` not currently available in normal PFC, we set the `pharml_mfr_co_short_nm` same as `pharml_mfr_co_lng_nm`. Meanwhile, for the `pharml_mfr_co_abrv_cd` we added dummy code starting from Z001.
+
+3. There are a large number of product which are consumer health products but they don’t have a CHC code related and currently in the BDF it leaves it blank. We used some logic to deduce the CHC code based on the NEC4 description and repopulated this blank chc code with our deduced values. The same is for those products which have CHC code but they don't have an NEC code. In order to distinguish it is DS deduced CHC value, we added this flag: `DS_Deduced`, and if the value is ‘y’ it is deduced.
+    + We know this is a very coarse logic for such large volume of SKUs and some SKUs may not have any sales. For the purpose of data completeness, we coded those SKUs regardless it has sales or not. However, if production can use the same logic to review the coding and correct them then the coding time can be largely saved.
+
+4. It is frustrating that a product master table doesn’t have a clear flag which can get just Consumer health products and the product master table attributes are quite esoteric for many end users. For the simple to filter out the consumer health product, we added this flag: `CHC_flag`, if it is ‘y’ then it is consumer health product.
+
+5. Light PFC caused a huge issue in the reporting database side, as the vast majority of them even it is coded but it is indeed not valuable for the reporting purpose. We created a Flag: `NEC_Other_no_CHC`, for those product which may not that useful, we may can group them together at the manufacturer level while reporting.
+
+6. Should we have a flag for those LightPFCs which need to be reported as clients have identified them? If this is the case, then we can group the lightPFC products to its manufacturer and/or CHC code if they have. This can be largely reduce the product master table and fact table size. There are 490K PFCs at this moment with LightPFC. Meanwhile, it has 110K products if we don't count LightPFC. If we can group some lightPFC together for the revenue completeness purpose, then the data size can be largely reduced
+
+
+### IQVIA Product Master Attributes Used
+
+Not all IQVIA product master attributes will be brought into this model, we currently only bring in the attributes most relevant to consumer health related. This can be expanded in the future if needed. For this exercise, we indeed linked CWH rate category into the master table. This can be done at BDF side in the future. Table \@ref(tab:piqvia) shows attributes we will use for our IQVIA product master in the data model and its proper descriptive names.
+
+```{sql piqvia, connection = con_odbc, echo = FALSE, max.print = -1, tab.cap = "Product IQVIA Master View Column Definition"}
+
+SELECT [attribute_name]
+      ,[attribute_name_use] As attribute_name_display
+      ,IsNUll([description], '') As description
+FROM [dbo].[pbi_Product_Attributes_IQVIA];
+
+```
+
+## Client Product Master Dimension Table
+
+IQVIA has a client territory and product segmentation customization tool: Everest, this tool has given the client great flexibility to customize the product attributes associated with each different product category. In contrast, this flexibility also caused some issue for the downwards reporting side maintenance issue.
+
+For this semantic data model, each client has its own client product dimension table. For the model standardization point of View, the model will use a fixed number of standardized client product attributes. In order to standardize the client product table attributes, DS team has done such:
+
+1) Get all currently available client product attributes;
+
+2) Use fuzzy grouping to map the similar attributes to a master attributes name;
+
+3) Save this raw attributes name to master attributes name to a master attributes lookup table. 
+    + When the new attributes added in client attributes, this table will get updated.
+
+4) For each client, each category it will have its own sets of product attributes, some are the same and some are not.
+    + DS will create a unified client product table: ClientName_AllCategories to accommodate all categories
+    + If some attributes is not available for some categories, then NULL value will be used.
+
+5) DS team has created an process to create the client product master view.
+    + All client product master view will have the exactly same attributes
+    + Underneath the display attribute names, each attribute is mapped to its proper client product attributes used via attributes mapping table
+    + In the model side, only the attributes which are relevant to a client are displayed
+
+The Table \@ref(tab:pclient) below depicts client attributes used for client product master and the standardized view column definition. The SQL code shows how this view columns are generated.
+
+```{sql pclient, connection = con_odbc, echo = TRUE, max.print = -1, tab.cap = "Product Client View Column Definition"}
+
+with cte
+as
+(
+  Select Distinct B.Name
+  From 
+  sys.tables A
+	Inner Join
+  sys.all_columns B
+	On A.object_id = B.object_id
+  Where A.name = 'Blackmores_AllCategories'
+)
+,cte2
+as
+(
+SELECT [attribute_name]
+		,B.name
+      ,[keep_attribute]
+      ,[attribute_name_use]
+      ,[sort_order]
+	  ,Case When [attribute_name] = 'fcc' Then ',fcc' 
+	  when name is null then ',Null'
+	  Else ',' + [attribute_name] End 
+	  + ' As ' + [attribute_name_use] as view_columns
+	  ,row_number() over(partition by attribute_name_use order by name desc) as rw
+  FROM [dbo].[pbi_Product_Attributes_Master] A
+  Left outer join
+  cte B
+  on A.attribute_name = B.name
+  Where A.keep_attribute = 1
+  )
+
+  Select view_columns
+  , isnull(name,'') as client_columns
+  , sort_order
+  , case when name is not null or [attribute_name] = 'fcc' then 1 else 0 end as column_display
+  from cte2
+  Where rw = 1
+  order by sort_order;
+
+```
+
+## Brick Dimension Table
+
+The Brick dimension table is designed to take care of all potential brick structure which is above IQVIA retail brick. There are currently potentially 3 different brick structure could be implemented:
+
+* Retail Brick: can be used for Sellin data, typically around 1040 bricks
+* Scan Brick: this is the new brick structure still in developing and evaluation. This structure is meant to be used for Scanout data with the lowest reportable geo-spatial structure. Ideally, the retail brick should be rolled up to scan brick.
+* CHW brick: this is the brick structure to protect the chemist warehouse store privacy. Retail bricks are rolled up to CWH Bricks. Ideally, the scan brick can be also rolled up to CWH brick
+
+In the ideal scenario, the brick structure is hierarchical from retail brick to scan brick to CWH brick. For the future prove and in the case of these structure is not hierarchical, a `brick_structure_base` attribute is added into the Brick dimension table. The brick structure base can be: retail brick, scan brick, or CWH brick. If the fact data is available, it can be extended to other geo-structure base as well, like ABS LGA, SA2, SA3 etc.
+
+The Table \@ref(tab:sqbrick) below depicts the attributes used for the `dim_brick` table.
+
+```{sql sqbrick, connection = con_odbc, echo = FALSE, max.print = -1, tab.cap = "Brick Dimension Table Columns"}
+
+SELECT [Brick_Attributes_Name]
+      ,IsNull([Description], '') As [Description]
+FROM [dbo].[pbi_Brick_Attributes];
+
+```
+
+
+### Ideal Brick Rollup Structure
+
+Ideally, all brick structure used should be roll up to any client territory. When a brick structure is in line with a client territory structure it is most valuable for client reporting purpose. Figure 
+@ref(fig:brickhr) depicts the ideal brick rollup hierarchy structure. 
+
+```{r brickhr, fig.cap="IQVIA Brick Hierarchy Structure Options", fig.height=8, fig.width=8}
+library(DiagrammeR)
+mermaid("
+    graph TD
+    RB[Retail Brick]-->SB[Scan Brick]
+    SB-->CB[CWH Brick]
+    CB--Option 1: Ideal Structure <p> may not practical-->CT(Client Territory)
+    RB-.Option 4:<p>Retail Brick to Territory.->CT
+    SB-.Option 3:<p>RB to SB to Territory.->CT
+    SB1[Scan Brick.] -.Option 2:<p>Scan Brock to Territory.->CT
+    CT-->SG[State Group]
+    SG-->AU((National))
+    style RB fill:#00b300,stroke:#333,stroke-width:4px;
+    style SB fill:#00ffff,stroke:#333,stroke-width:2px;
+    style SB1 fill:#00ffff,stroke:#333,stroke-width:4px;
+    style CB fill:#99ccff,stroke:#333,stroke-width:2px;
+    style CT fill:#f96,color:#fff,stroke:#333,stroke-width:2px;
+    style SG fill:#99cc00,stroke:#333,stroke-width:2px;
+    style AU fill:#F1EA0E,stroke:#333,stroke-width:4px;
+    ", height = 700, width = 700)
+```
+
+Unfortunately, this was not always the case for our current CWH bricks to client territories. 
+
+### CWH Brick as the Lowest Granular Structure
+
+Since currently the lowest reportable scanout geography which has been evaluated by stats office is CWH brick, the Figure \@ref(fig:cwbrickhr) will be implemented. Within the each CWH brick only 2 banner groups will be reported:
+
+* Chemist warehouse banner group: Chemist warehouse, My Chemist, Beauty spot
+* Other Banners: All other banners other than CWH group
+
+At the state level, all state reportable banners can be reported. 
+
+```{r cwbrickhr, fig.cap="Current implementation of CWH Brick to State Group", fig.height=8, fig.width=8}
+library(DiagrammeR)
+
+mermaid("
+    graph LR
+    CB[CWH Brick]-->SG[State Group]
+    SG-->AU((National))
+    subgraph Brick_Reportable_Banners
+    B1[CWH Group]
+    B2[All Other Banners]
+    end
+    subgraph State_Reportable_Banners
+    RB[All Reportable Banners]
+    end
+    CB-.->B1
+    CB-.->B2
+    SG-.->RB
+    style CB fill:#99ccff,stroke:#333,stroke-width:4px;
+    style SG fill:#99cc00,stroke:#333,stroke-width:2px;
+    style AU fill:#F1EA0E,stroke:#333,stroke-width:4px;
+    ", height = 350, width = 700)
+
+```
+
+With this implementation, The Brick dimension key: Brick_ID, will be same as CWH_Brick_ID. Brick_Name, Scan_Brick_ID, and Scan_Brick_Name will be blank or null value.
+
+## Banner Dimension Table
+
+Banner Dimension has a `channel` attribute to distinguish: retail pharmacy and grocery. DS team has added some additional attributes into the Banner dimension table. These attributes can be reviewed and incorporate into BDF master table. `Is_Banner_Client_Reportable` refers to client subscription to specific banners. This attributes is only useful for client not useful for the internal user. The attributes therefore is client specific. For simplicity, there is no link between banner to client module. The attributes value is populated during the client ETL stage.
+
+A certain banners, IQVIA doesn't have enough panel stores to make the banner reportable. These banners include:
+
+* Priceline
+  + Priceline Pharmacy
+  + Priceline Health & Beauty
+* Good Price Pharmacy
+* National Pharmacies
+
+For these banners, if a client bought the data from other source then we can integrate them into our data and make these banner reportable. The last 3 invisible attributes are used to indicate if such banner is reportable.
+
+The Table \@ref(tab:sqbanner) below depicts the attributes used for the `dim_banner` table.
+
+```{sql sqbanner, connection = con_odbc, echo = FALSE, max.print = -1, tab.cap = "Banner Dimension Table Columns"}
+
+SELECT [banner_Attributes]
+      ,[Description]
+      ,[Client_Display]
+FROM [dbo].[pbi_Banner_Attributes];
+
+```
+
+Given that, not all banners are reportable at a specific state level, from banner to fact table there is a transition dimension table banner state.
+
+When there is not enough panel stores in a state for a reportable banner at a particular period, the state will group to Other States. Since our Scanout data projection has made a major overhaul. The new projection can project data down to Store + FCC level. 
+
+### Banner State Dimension Table
+
+```{sql sqbannerS, connection = con_odbc, echo = FALSE, max.print = -1, tab.cap = "Banner State Dimension Table Columns"}
+
+SELECT [Banner_State_Attributes]
+      ,IsNull([Description], '') As [Description]
+      ,[Client_Display]
+FROM [dbo].[pbi_Banner_State_Attributes];
+
+```
+
+## Date(Period) Dimension Table {#te}
+
+Date dimension table is a key dimension table for all reporting, as most sales reporting needs time intelligence.
+
+In this data model, monthly and weekly fact data will be combined in the same fact table. Therefore, the monthly and weekly date will be combined in the same dimension table.
+
+For a client, when a period name is not specified and there is no date attributes included, a default period name will be used to display measures at the latest date. The default period name is a configurable value for each client, which can be one of all available period names. This means one client may use MAT while the another may use MQT.
+
+The Figure \@ref(fig:ptype) below depicts Date dimension table period types and all available period names and its rollup path.
+
+```{r ptype, layout="l-screen-insert", fig.cap="Date Period Type and its Rollup Hierarchy"}
+
+knitr::include_graphics("image/period_type.jpg")
+
+```
+
+### Period Type and Period Name Configuration Table
+
+A global period name configuration table will add into our data model data warehouse to centrally control the available period name and its periods covered as in the table below:
+
+This table will be used as a reference table to generate the Date Dimension table attributes as described in the section of Date Dimension table.
+
+```{sql sqpconfig, connection = con_odbc_iqvia, echo = FALSE, max.print = -1, output.var="p_config"}
+
+SELECT [Period_Type]
+      ,[Period_Name]
+      ,[Periods]
+      ,[Period_Short_Name]
+FROM [dbo].[Admin_Config_Period_All];
+```
+
+```{r pconfig}
+df <- t(d_date) %>% data.frame()
+
+names <- rownames(df)
+rownames(df) <- NULL
+df <- cbind(names, df)
+
+names(df) <- c("Attribute Name", "Value Example 1", "Value Example 2", "Value Example 3")
+
+knitr::kable(df, caption = "Date Dimension Table Columns")
+
+```
+
+
+
+Given that the different period names has different descriptive names and other attributes values, two date dimension tables will be created:
+
+* Date_Base dimension table: this one is directly linked to Fact table to form a one to many relationship. The dimension table is invisible to end users.
+* Date Dimension table: based on the hierarchy structure depicted in the figure \@ref(fig:ptype), the lowest date unit weekly or monthly will be replicated in many period name hierarchy. The Date dimension table and Date_Base table is many to one relationship.
+
+
+### Date Dimension Key Consideration
+
+
+It is a good practice to use a meaningful key as data surrogate key, this can reduce the time to infer the meaning of date key in the fact table. The data surrogate key is integer data type, we define the data surrogate key as below convention:
+
+__`YYYYMMDDXZ`__
+
+Where the last 2 digits X and Z are period Starting/Ending and period type indicator:
+
+* For X
+    + if the date is using a period starting date, then X = 0;
+    + if the date is using a period ending date, then X = 1
+* For Z
+    + if the period type is `Monthly`, then Z = 1;
+    + if the period type is `Weekly`, then Z = 2
+
+Examples:
+
+* 2018050101 this stands for the date if a monthly date, and using the month start date $1^{st} May\:2018$;
+* 2020071812 this stands for the date is a weekly date, and using the week end date $18^{th} July\:2020$
+
+
+### Date Base Table
+
+Date base dimension table is very simple and it only has 4 columns. The table columns and its value examples is as in Table \@ref(tab:dbase) as below:
+
+```{sql sqDbase, connection = con_odbc_iqvia, echo = FALSE, max.print = -1, output.var="d_base"}
+
+SELECT top (1)[period_id]
+      ,[period_base]
+      ,[period_start]
+      ,[period_end]
+FROM [dbo].[dim_date_base];
+```
+
+```{r dbase}
+df <- t(d_base) %>% data.frame()
+
+names <- rownames(df)
+rownames(df) <- NULL
+df <- cbind(names,df)
+
+names(df) <- c("Attribute Name", "Date Value Example")
+
+knitr::kable(df, caption = "Date Base Dimension Table Columns")
+
+```
+
+
+### Date Dimension Table {#CDimDate}
+
+
+Date dimension table columns and its value examples is as in Table \@ref(tab:ddim)as below:
+
+```{sql sqDDim, connection = con_odbc_iqvia, echo = FALSE, max.print = -1, output.var="d_date"}
+
+SELECT TOP (3) *
+FROM [dbo].[vw_Dim_Date]
+Order by newid();
+```
+
+```{r ddim}
+df <- t(d_date) %>% data.frame()
+
+names <- rownames(df)
+rownames(df) <- NULL
+df <- cbind(names, df)
+
+names(df) <- c("Attribute Name", "Value Example 1", "Value Example 2", "Value Example 3")
+
+knitr::kable(df, caption = "Date Dimension Table Columns")
+
+```
+
+### Client Discrete Date Reporting
+
+Some clients have a set of special dates or frequencies to be reported. There are a couple of ways to implement this. The actual implementation will be added later.
+
+
 
 
 
 ```{r}
-
-library(htmltools)
-library(flextable)
-ft <- flextable(head(iris))
-tab_list <- list()
-for(i in 1:3){
-  tab_list[[i]] <- tagList(
-    tags$h3(paste0("iteration ", i)),
-    tags$p("JUst for the test pupose"),
-    htmltools_value(ft)
-  )
-}
-tagList(tab_list)
-
+# 
+# library(htmltools)
+# library(flextable)
+# ft <- flextable(head(iris))
+# tab_list <- list()
+# for(i in 1:3){
+#   tab_list[[i]] <- tagList(
+#     tags$h3(paste0("iteration ", i)),
+#     tags$p("JUst for the test pupose"),
+#     htmltools_value(ft)
+#   )
+# }
+# tagList(tab_list)
+# 
 ```
+
 
 
 

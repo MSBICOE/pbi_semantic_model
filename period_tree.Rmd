@@ -1,0 +1,51 @@
+---
+title: ""
+output: 
+  html_document:
+    self_contained: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+### 
+
+```{r}
+
+library(collapsibleTree)
+### SQL connection
+library(odbc)
+drv <- odbc::odbc()
+connection <-  paste0("Driver={SQL Server Native Client 11.0};",    # Drivers
+                      "Server=sydssql162d;", # Server Address
+                      "Database=Product_Customization;", # Database Name
+                      "Trusted_Connection=yes;")
+
+con_odbc <- dbConnect(drv,
+                      .connection_string = connection, encoding = "latin1")
+
+Date <- odbc::dbGetQuery(con_odbc, "
+                              SELECT [Period_Type]
+                                    ,[Period_Name]
+                                    ,[Period_Level_1]
+                                    ,[Period_Level_2]
+                                    ,[Period_Level_3]
+                              FROM [dbo].[pbi_Period_Hierarchy];
+                                ")
+
+# Visualizing the order in which the node colors are filled
+library(RColorBrewer)
+
+collapsibleTree(
+  Date,
+  hierarchy = c("Period_Type", "Period_Name", "Period_Level_1", "Period_Level_2", "Period_Level_3"),
+  width = 800,
+  zoomable = TRUE,
+  fill = c(rep(brewer.pal(11, "RdBu"), 2), brewer.pal(8, "RdBu")),
+  fillByLevel = TRUE,
+  collapsed = FALSE
+)
+
+
+```
