@@ -28,6 +28,7 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+library(dplyr)
 library(kableExtra)
 library(formattable)
 ### SQL connection
@@ -111,7 +112,7 @@ The conceptual ERD for the data model is proposed as the below Figure \@ref(fig:
 
 ```{r dmodel, fig.cap="Data model design conceptual ERD"}
 
-knitr::include_graphics("image/pbi_erd_banner_state_3.svg")
+knitr::include_graphics("image/pbi_erd_banner_state_7.svg")
 
 ```
 
@@ -321,6 +322,11 @@ mermaid("
 
 With this implementation, The Brick dimension key: Brick_ID, will be same as CWH_Brick_ID. Brick_Name, Scan_Brick_ID, and Scan_Brick_Name will be blank or null value.
 
+## Chanel Dimension Table
+
+Channel dimension table is a very simple table to distinguish if a banner is Retail or Grocery. 
+
+
 ## Banner Dimension Table
 
 Banner Dimension has a `channel` attribute to distinguish: retail pharmacy and grocery. DS team has added some additional attributes into the Banner dimension table. These attributes can be reviewed and incorporate into BDF master table. `Is_Banner_Client_Reportable` refers to client subscription to specific banners. This attributes is only useful for client not useful for the internal user. The attributes therefore is client specific. For simplicity, there is no link between banner to client module. The attributes value is populated during the client ETL stage.
@@ -352,6 +358,8 @@ When there is not enough panel stores in a state for a reportable banner at a pa
 
 ### Banner State Dimension Table
 
+Banner state Dimmesion table is used for client for banner reporting. Due to a reportable banner state changes based on the different time period, to report the banner state related sales data, the banner state attributes in this table have to be used. **_This means a combined attributes from Banner table and State table, will not yield the same results as the same combination in this table!_**
+
 ```{sql sqbannerS, connection = con_odbc, echo = FALSE, max.print = -1, tab.cap = "Banner State Dimension Table Columns"}
 
 SELECT [Banner_State_Attributes]
@@ -361,7 +369,41 @@ FROM [dbo].[pbi_Banner_State_Attributes];
 
 ```
 
-## Date(Period) Dimension Table {#te}
+Due to the complexity of IRI pannel banner data, like Priceline & Good price pharmacy. Some SKUs which is calculated in IQVIA projected sales data may not included in the IRI supplied data for a particular client for various reasons, like an SKU is not included in a client's market definition. For this reason, those SKUs which are not included in IRI data based on a client definition will need to assign to Other banner Other states for the overall sales completeness. we created a dummy banner state code to hold this data. At the reporting stage, based on the reportable banner state attributes, it will all go to the Other banner Other states. 
+
+This dummy record is illustrated as in the table \@ref(tab:btdummy) below:
+
+```{sql sqbtdummy, connection = con_odbc_iqvia, echo = FALSE, max.print = -1, output.var="d_btdummy"}
+
+SELECT *
+FROM [dbo].[dim_banner_state]
+Where banner_state_id = -999;
+```
+
+```{r btdummy}
+
+df <- t(d_btdummy) %>% data.frame(stringsAsFactors = F)
+
+names <- rownames(df)
+rownames(df) <- NULL
+df <- cbind(names, df)
+
+names(df) <- c("Attribute_Name", "Date_Value_Example")
+
+# knitr::kable(df, caption = "Dim Banner State Dummy Code")
+df %>% 
+ mutate(
+    Date_Value_Example = cell_spec(Date_Value_Example, "html", color = ifelse(Attribute_Name == "banner_state_id", "red", "black"))
+  ) %>%
+  kable(format = "html", escape = F, caption = "Dim Banner State Dummy Code") %>%
+    footnote(general = "The integer -999 is a hardcoded number to capture all sales records which are not presented in IRI datasets.",
+           fixed_small_size = TRUE
+           )
+
+```
+
+
+## Date(Period) Dimension Table
 
 Date dimension table is a key dimension table for all reporting, as most sales reporting needs time intelligence.
 
@@ -381,7 +423,7 @@ knitr::include_graphics("image/period_type.jpg")
 
 A global period name configuration table will add into our data model data warehouse to centrally control the available period name and its periods covered as in the table below:
 
-This table will be used as a reference table to generate the Date Dimension table attributes as described in the section of Date Dimension table.
+This table will be used as a reference table to generate the Date Dimension table attributes as described in the section of Date Dimension table. Table \@ref(tab:pconfig) depicts the currently used period names and its configuration values.
 
 ```{sql sqpconfig, connection = con_odbc_iqvia, echo = FALSE, max.print = -1, output.var="p_config"}
 
@@ -393,18 +435,20 @@ FROM [dbo].[Admin_Config_Period_All];
 ```
 
 ```{r pconfig}
-df <- t(d_date) %>% data.frame()
 
-names <- rownames(df)
-rownames(df) <- NULL
-df <- cbind(names, df)
-
-names(df) <- c("Attribute Name", "Value Example 1", "Value Example 2", "Value Example 3")
-
-knitr::kable(df, caption = "Date Dimension Table Columns")
+p_config %>%
+  mutate(
+    Period_Name = cell_spec(Period_Name, "html", color = ifelse(Periods < 0, "red", "darkblue")),
+    Periods = cell_spec(Periods, "html", color = ifelse(Periods < 0, "red", "darkblue"))
+  ) %>%
+  kable(format = "html", escape = F, caption = "Period Name Configuration Table") %>% 
+    footnote(general = "Periods attribute is the number of reoccuring periods covered in a period name. ",
+           number = c("Negative value means there is really no fixed periods; ", "YTD, Calendar Year, Calendar Quarter, YTD Weeks change number of periods at each diffrerent date so using negative values; ",
+                      "There is no particular meaning for the value of negative pe se it is just used to distinguish period names;"),
+           fixed_small_size = TRUE
+           )
 
 ```
-
 
 
 Given that the different period names has different descriptive names and other attributes values, two date dimension tables will be created:
@@ -465,7 +509,7 @@ knitr::kable(df, caption = "Date Base Dimension Table Columns")
 ### Date Dimension Table {#CDimDate}
 
 
-Date dimension table columns and its value examples is as in Table \@ref(tab:ddim)as below:
+Date dimension table columns and its value examples is as in Table \@ref(tab:ddim) as below:
 
 ```{sql sqDDim, connection = con_odbc_iqvia, echo = FALSE, max.print = -1, output.var="d_date"}
 
@@ -492,8 +536,562 @@ knitr::kable(df, caption = "Date Dimension Table Columns")
 Some clients have a set of special dates or frequencies to be reported. There are a couple of ways to implement this. The actual implementation will be added later.
 
 
+## Sellin_Scan Dimension Table
+
+This is a very simple dimension table to separate the fact data into sellin and scanout partition. 
+
+To separate the sellin and scanout into different partitions in the fact table renders the different frequency of updates of sellin/scanout data possiple. This means we can update sellin and scanout data in the same fact table in the different cadence without reloading everything. This can save a significant data refreshing time.
 
 
+## Store Dimension Table
+
+The store dimension table is built for calculating the store distribution metrics and also for the internal data analysis use. This dimension table will be visible for internal users but it will be hidden for the external clients. However, if a client is subscribed to IQVIA store level data, then this table can be set to visible to a client as well.
+
+DS team has made effort to include many ABS geospatial attributes namely:
+
+- LGA, local government area;
+- SUA, significant urban area;
+- GCCSA, Greater Capital City Statistical Area;
+- SA1, ABS statistical area level 1
+- SA2, ABS statistical area level 2
+- SA3, ABS statistical area level 3
+- SA4, ABS statistical area level 4
+
+
+It will be great that these attributes can also be added into the Outlet master table. 
+
+Store dimension table columns and its value examples is as in Table \@ref(tab:dstore) as below:
+
+```{sql sqDStore, connection = con_odbc_iqvia, echo = FALSE, max.print = -1, output.var="d_store"}
+
+SELECT TOP (2) *
+FROM [dbo].[dim_store]
+Order by newid();
+```
+
+```{r dstore}
+df <- t(d_store) %>% data.frame()
+
+names <- rownames(df)
+rownames(df) <- NULL
+df <- cbind(names, df)
+
+names(df) <- c("Attribute Name", "Value Example 1", "Value Example 2")
+
+knitr::kable(df, caption = "Store Dimension Table Columns")
+
+```
+
+### Grocery Store Consideration
+
+While we currently don't have the grocery store level information, the store table is designed to incorporate the grocery store as well. However, there is no such information currently.
+
+
+## Store Banner Period Table
+
+Since a store's banner association is time related, a store may change its banner association over time. The dim_store_banner_period dimension table is a transition table to hold such information. It is also a semi-fact table as it can count the banner and/or banner state store members over time. Three key is sufficient to populate this table. However, for the pre-Power BI load ETL process purpose, there are additional attributes included in this table for look-up dimension key purpose.
+
+
+```{sql sqsbanner, connection = con_odbc, echo = FALSE, max.print = -1, tab.cap = "Store Banner State Dimension Table Columns"}
+
+SELECT [Store_Banner_Attributes]
+      ,[Description]
+      ,[Client_Display]
+FROM [dbo].[pbi_Store_Banner_State];
+
+```
+
+
+This the example record of dim_store_banner_state table is illustrated as in the table \@ref(tab:storebs) below:
+
+```{sql sqstorebs, connection = con_odbc_iqvia, echo = FALSE, max.print = -1, output.var="d_storebs"}
+
+SELECT top (1) *
+FROM [dbo].[dim_store_banner_state];
+```
+
+```{r storebs}
+
+df <- t(d_storebs) %>% data.frame(stringsAsFactors = F)
+
+names <- rownames(df)
+rownames(df) <- NULL
+df <- cbind(names, df)
+
+names(df) <- c("Attribute_Name", "Date_Value_Example")
+
+knitr::kable(df, caption = "Dim Store Banner State REcord Example")
+# df %>% 
+#  mutate(
+#     Date_Value_Example = cell_spec(Date_Value_Example, "html", color = ifelse(Attribute_Name == "banner_state_id", "red", "black"))
+#   ) %>%
+#   kable(format = "html", escape = F, caption = "Dim Banner State Dummy Code") %>%
+#     footnote(general = "The integer -999 is a hardcoded number to capture all sales records which are not presented in IRI datasets.",
+#            fixed_small_size = TRUE
+#            )
+
+```
+
+
+
+# Fact Table Design Considerations
+
+These Semantic data model only have 3 fact tables:
+
+1. fact_Brick_Banner_Sales: 
+
+## Storage File Group Consideration
+
+```{sql sqlFilegroup, connection = con_odbc_iqvia, echo = TRUE, eval = FALSE}
+
+--create a new database file group
+ALTER DATABASE [iqviaau_reporting_db] ADD FILEGROUP [fg_Fact_Data];
+ALTER DATABASE [iqviaau_reporting_db] ADD FILEGROUP [fg_Fact_Store];
+
+
+--Add new data file for fact brick sales to the new file group
+ALTER DATABASE [iqviaau_reporting_db]
+    ADD FILE 
+    (
+    NAME = [iqviaau_reporting_db_fb],
+    FILENAME = 'd:\Program Files\Microsoft SQL Server\MSSQL13.MSSQLSERVER\MSSQL\DATA\iqviaau_reporting_db_fact_fb.ndf',
+        SIZE = 5120 MB, 
+        MAXSIZE = UNLIMITED, 
+        FILEGROWTH = 1024 MB
+    ) TO FILEGROUP [fg_Fact_Data];
+
+--Add new data file for fact brick sales to the new file group
+ALTER DATABASE [iqviaau_reporting_db]
+    ADD FILE 
+    (
+    NAME = [iqviaau_reporting_db_fs],
+    FILENAME = 'd:\Program Files\Microsoft SQL Server\MSSQL13.MSSQLSERVER\MSSQL\DATA\iqviaau_reporting_db_fact_fs.ndf',
+        SIZE = 5120 MB, 
+        MAXSIZE = UNLIMITED, 
+        FILEGROWTH = 1024 MB
+    ) TO FILEGROUP [fg_Fact_Store];
+
+-- create table partition function
+
+CREATE PARTITION FUNCTION [func_salesPart](int) 
+AS RANGE LEFT FOR VALUES (101, 102, 103, 104, 105, 106, 201, 202, 203, 204, 205, 206, 301, 302, 303, 304, 305, 401, 402, 403, 404, 405)
+
+--Create Partition scheme
+CREATE PARTITION SCHEME [sch_brickSalesPart] AS PARTITION [func_salesPart] All TO ([fg_Fact_Data]);
+CREATE PARTITION SCHEME [sch_storeSalesPart] AS PARTITION [func_salesPart] All TO ([fg_Fact_Store]);
+
+```
+
+## Brick Banner Level Sales Fact Table
+
+
+### Table partition
+
+```{sql sqlFactBrick, connection = con_odbc_iqvia, echo = TRUE, eval = FALSE}
+
+-- Create fact banner brick sales table for non-IRI panel banners (IQVIA Banner only)
+CREATE TABLE [dbo].[fact_banner_brick_sales_nip] (
+	[partition_key] [int] Not Null,
+	[banner_state_id] [int] Not Null,
+	[brick_id] [int] not Null,
+	[period_id] [int] Not NULL,
+	[fcc] [int] Not NULL,
+	[amount] [bigint] NULL,
+	[unit] [bigint] NULL,
+	[baseline_sales_amount] [bigint] NULL,
+	[baseline_sales_unit] [bigint] NULL,
+	[promotion_sales_amount] [bigint] NULL,
+	[promotion_sales_unit] [bigint] NULL,
+	[export_amount] [bigint] NULL,
+	[export_unit] [bigint] NULL,
+	[online_amount] [bigint] NULL,
+	[online_unit] [bigint] NULL
+) ON [sch_brickSalesPart] (partition_key);
+
+go
+
+CREATE CLUSTERED COLUMNSTORE INDEX [cci_fact_banner_brick_sales_nip] ON [dbo].[fact_banner_brick_sales_nip] 
+WITH (DROP_EXISTING = OFF, COMPRESSION_DELAY = 0) ON [sch_brickSalesPart] (partition_key);
+
+go
+-- Create fact banner brick sales staging table for non-IRI panel banners (IQVIA Banner only)
+CREATE TABLE [dbo].[fact_banner_brick_sales_nip_stage] (
+	[partition_key] [int] Not Null,
+	[banner_state_id] [int] Not Null,
+	[brick_id] [int] not Null,
+	[period_id] [int] Not NULL,
+	[fcc] [int] Not NULL,
+	[amount] [bigint] NULL,
+	[unit] [bigint] NULL,
+	[baseline_sales_amount] [bigint] NULL,
+	[baseline_sales_unit] [bigint] NULL,
+	[promotion_sales_amount] [bigint] NULL,
+	[promotion_sales_unit] [bigint] NULL,
+	[export_amount] [bigint] NULL,
+	[export_unit] [bigint] NULL,
+	[online_amount] [bigint] NULL,
+	[online_unit] [bigint] NULL
+) ON [fg_Fact_Data];
+
+GO
+
+ALTER TABLE [dbo].[fact_banner_brick_sales_nip_stage]  WITH CHECK ADD  CONSTRAINT [chkBBPartID] CHECK  (partition_key > 100 AND partition_key <= 101);
+
+GO
+
+ALTER TABLE [dbo].[fact_banner_brick_sales_nip_stage] CHECK CONSTRAINT [chkBBPartID];
+
+GO
+
+CREATE CLUSTERED COLUMNSTORE INDEX [cci_fact_banner_brick_sales_nip_stage] ON [dbo].[fact_banner_brick_sales_nip_stage] 
+WITH (DROP_EXISTING = OFF, COMPRESSION_DELAY = 0) ON [fg_Fact_Data];
+
+--ALTER TABLE [dbo].[fact_banner_brick_sales_nip_stage]  DROP CONSTRAINT if exists [chkBBPartID];
+--DROP INDEX IF Exists [cci_fact_banner_brick_sales_nip_stage] ON [dbo].[fact_banner_brick_sales_nip_stage];
+
+```
+
+### Partition Data Switch In/Out
+
+```{sql sqlrefreshFactBrick, connection = con_odbc_iqvia, echo = TRUE, eval = FALSE}
+Create Proc [dbo].[usp_refresh_fact_banner_brick_sales_nip_SI_MTH]
+@year as int
+As
+/*
+This proc was created by Steven Wang at 31 July 2020
+nip: means non-IRI pannel banners, which means if the data if from IRI, then they are not included
+SI_MTH: Sellin data Monthly
+*/
+set nocount on;
+
+--Declare @year int;
+--Set @year = 2019;
+
+Declare @part_key int;
+Declare @part_id int;
+Declare @period_start int;
+Declare @period_end int;
+Declare @sql_ch varchar(max);
+Declare @sql varchar(max);
+Declare @sql_out varchar(max);
+Declare @date_updated date;
+set @date_updated = cast(getdate() as date)
+print @date_updated
+
+Set @period_start = @year * 1000000 + 10101
+print @period_start
+
+Set @period_end = (@year + 1) * 1000000 + 10101
+print @period_end
+
+SELECT @part_key = [partition_key]
+, @part_id  = [part_id]
+FROM [dbo].[vw_Dim_Sellin_Scanout]
+Where [sales_type] = 'Sellin'
+and [period_type] = 'Monthly'
+And [period_year] = @year;
+
+print @part_key
+print @part_id
+
+If @part_key = 101 
+	set @sql_ch = '
+			ALTER TABLE [dbo].[fact_banner_brick_sales_nip_stage]  
+			WITH CHECK ADD  CONSTRAINT [chkBBPartID] 
+			CHECK  (partition_key IS NOT NULL AND partition_key <= $$);'
+Else 
+	set @sql_ch = '
+				ALTER TABLE [dbo].[fact_banner_brick_sales_nip_stage]
+				WITH CHECK ADD CONSTRAINT [chkBBPartID]
+				CHECK (partition_key > $$ - 1 AND partition_key <= $$);'
+print @sql_ch
+
+set @sql = 'ALTER TABLE [dbo].[fact_banner_brick_sales_nip_stage] SWITCH TO [dbo].[fact_banner_brick_sales_nip] PARTITION $$;'
+set @sql_out = 'ALTER TABLE [dbo].[fact_banner_brick_sales_nip] SWITCH PARTITION $$ TO [dbo].[fact_banner_brick_sales_nip_stage];'
+
+--delete all the data in staging table
+Truncate Table fact_banner_brick_sales_nip_stage;
+--drop constraint
+ALTER TABLE [dbo].[fact_banner_brick_sales_nip_stage]  DROP CONSTRAINT if exists [chkBBPartID];
+--create the columnstore index to match with the fact table
+if not exists (Select 1 from sys.indexes Where name = 'cci_fact_banner_brick_sales_nip_stage')
+	begin
+		CREATE CLUSTERED COLUMNSTORE INDEX [cci_fact_banner_brick_sales_nip_stage] ON [dbo].[fact_banner_brick_sales_nip_stage] 
+		WITH (DROP_EXISTING = OFF, COMPRESSION_DELAY = 0) ON [fg_Fact_Data];
+	end
+--performa the swith out
+set @sql_out = replace(@sql_out, '$$', @part_id);
+exec(@sql_out);
+
+--delete the switched out data
+Truncate Table fact_banner_brick_sales_nip_stage;
+--drop the columnstore index for faster insert
+DROP INDEX IF Exists [cci_fact_banner_brick_sales_nip_stage] ON [dbo].[fact_banner_brick_sales_nip_stage];
+
+--Insert updated data to stage
+insert into [dbo].[fact_banner_brick_sales_nip_stage] with(tablock)
+([partition_key]
+,[banner_state_id]
+,[brick_id]
+,[period_id]
+,[fcc]
+,[amount]
+,[unit]
+,[baseline_sales_amount]
+,[baseline_sales_unit]
+,[promotion_sales_amount]
+,[promotion_sales_unit]
+,[export_amount]
+,[export_unit]
+,[online_amount]
+,[online_unit]
+,[date_updated])
+select
+@part_key As partition_key
+, b.[banner_state_id]
+,b.[brick_id]
+,a.Period_Id
+,a.fcc
+,cast(round(sum(a.Amount)*100,0) as bigint) as Amount
+,cast(round(sum(a.Unit)*100,0) as bigint) as Unit
+,0 as [baseline_sales_amount]
+,0 as [baseline_sales_unit]
+,0 as [promotion_sales_amount]
+,0 as [promotion_sales_unit]
+,0 as [export_amount]
+,0 as [export_unit]
+,0 as [online_amount]
+,0 as [online_unit]
+,@date_updated As [date_updated]
+from [dbo].[ddd_monthly_sales] as a
+inner join
+[dbo].[dim_store_banner_state] as b
+on a.Outlet=b.[outlet]
+and a.Period_Id=b.[period_id]
+Where 
+a.Period_Id >= @period_start
+and a.Period_Id < @period_end
+group by 
+b.[banner_state_id]
+,b.[brick_id], a.Period_Id, a.fcc;
+
+if not exists (Select 1 from sys.indexes Where name = 'cci_fact_banner_brick_sales_nip_stage')
+	begin
+		CREATE CLUSTERED COLUMNSTORE INDEX [cci_fact_banner_brick_sales_nip_stage] ON [dbo].[fact_banner_brick_sales_nip_stage] 
+		WITH (DROP_EXISTING = OFF, COMPRESSION_DELAY = 0) ON [fg_Fact_Data];
+	end
+
+--check the data integrity
+set @sql_ch = replace(@sql_ch, '$$', @part_key);
+exec(@sql_ch);
+
+--perform the data swith in
+set @sql = replace(@sql, '$$', @part_id);
+exec(@sql);
+
+return 0;
+
+```
+
+
+### Data Refresh Strategy
+
+
+```{sql sqlrefreshall, connection = con_odbc_iqvia, echo = TRUE, eval = FALSE}
+CREATE Proc [dbo].[usp_refresh_fact_banner_brick_sales_ALL]
+@banner_panel varchar(20) = 'nip', -- 'nip', 'ipo_iqvia', 'ipo_iri'
+@data_source varchar(20) = 'Scanout', -- '%', 'Sellin', 'Scanout'
+@period_type varchar(20) = 'Weekly', -- '%', 'Monthly', 'Weekly'
+@year as varchar(4) = '%' -- 2018
+As
+/*
+This proc was created by Steven Wang at 31 July 2020
+nip: means non-IRI pannel banners, which means if the data if from IRI, then they are not included
+All: means to refresh all partitions
+
+to run the stored procedure use:
+
+EXEC	[dbo].[usp_refresh_fact_banner_brick_sales_ALL]
+		@banner_panel = N'nip', --available values: 'nip', 'ipo_iqvia', 'ipo_iri'
+		@data_source = N'%', -- available values: '%', 'Sellin', 'Scanout'
+		@period_type = N'%', -- available values: '%', 'Monthly', 'Weekly'
+		@year = N'%'; -- available values: '%', '2020', '2019', etc
+*/
+set nocount on;
+
+--Declare @year int;
+--Set @year = 2019;
+
+Declare @data_source_in varchar(20);
+Declare @period_type_in varchar(20);
+Declare @year_in int;
+Declare @SO_Table As table (
+	[sales_type] varchar(20), 
+	[period_type] varchar(20), 
+	[period_year] int,
+	part_id int)
+
+insert into @SO_Table
+Select
+[sales_type],
+[period_type],
+[period_year],
+part_id
+FROM [dbo].[vw_Dim_Sellin_Scanout]
+Where [sales_type] like @data_source
+and [period_type] like @period_type
+And cast([period_year] as varchar(4)) like @year
+
+
+SELECT top (1)
+@data_source_in = [sales_type]
+, @period_type_in = [period_type]
+, @year_in = [period_year]
+FROM @SO_Table
+order by part_id;
+
+--print @data_source_in
+--print @period_type_in
+--print @year_in
+
+While 0 = 0
+Begin
+	
+	if @banner_panel = 'nip' and @data_source_in = 'Sellin' And @period_type_in = 'Monthly'
+		Begin
+			EXEC [dbo].[usp_refresh_fact_banner_brick_sales_nip_SI_MTH] @year = @year_in
+		end
+
+	if @banner_panel = 'nip' and @data_source_in = 'Sellin' And @period_type_in = 'Weekly'
+		Begin
+			EXEC [dbo].[usp_refresh_fact_banner_brick_sales_nip_SI_WK] @year = @year_in
+		end	
+
+	if @banner_panel = 'nip' and @data_source_in = 'Scanout' And @period_type_in = 'Monthly'
+		Begin
+			EXEC [dbo].[usp_refresh_fact_banner_brick_sales_nip_SO_MTH] @year = @year_in
+		end
+
+	if @banner_panel = 'nip' and @data_source_in = 'Scanout' And @period_type_in = 'Weekly'
+		Begin
+			EXEC [dbo].[usp_refresh_fact_banner_brick_sales_nip_SO_WK] @year = @year_in
+		end
+
+	if @banner_panel = 'ipo_iqvia' and @data_source_in = 'Scanout' And @period_type_in = 'Monthly'
+		Begin
+			EXEC [dbo].[usp_refresh_fact_banner_brick_sales_ipo_iqvia_SO_MTH] @year = @year_in
+		end
+
+	if @banner_panel = 'ipo_iqvia' and @data_source_in = 'Scanout' And @period_type_in = 'Weekly'
+		Begin
+			EXEC [dbo].[usp_refresh_fact_banner_brick_sales_ipo_iqvia_SO_WK] @year = @year_in
+		end
+
+
+	Delete FROM @SO_Table
+	Where [sales_type] = @data_source_in
+	And [period_type] = @period_type_in
+	And [period_year] = @year_in;
+
+	SELECT top (1)
+	@data_source_in = [sales_type]
+	, @period_type_in = [period_type]
+	, @year_in = [period_year]
+	FROM @SO_Table
+	order by part_id;
+
+	if @@ROWCOUNT = 0
+		Break
+end
+
+return 0;
+```
+
+
+partitions:
+
+1. sellin weekly
+2. sellin monthly
+3. scanout weekly
+4. scanout monthly
+
+
+### Scanout Sales Data
+
+### Sellin Sales Data
+
+### Online Sales Data
+
+### Domestic/Exporting Sales Splitting
+
+### Grocery Sales Data
+
+### IRI Sales Data
+
+### CBG Sales Data Consideration
+
+## Store Level Sales Fact Table
+
+### Grocery Store Level Sales Reverse Engineering from Aggregated Grocery Data
+
+### IRI Store Level Sales Reverse Engineering from Aggregated Grocery Data
+
+
+# Power BI Master Template Design
+
+## Power BI Master Data Model
+
+## Template Parameter Design
+
+## Fact Table Data Partition and Incremental Data Refreshing
+
+
+
+FactBanner_Brick_PL
+FactBanner_Brick_GP
+FactBanner_Brick_NP
+
+1.get banner_state, period, exporting_ratio,and first birckID, from the fact baner _brick sales, table 1
+
+
+2. cartisan join IRI data by:
+  banner state
+  period
+  fcc
+  
+3 inerjoin table 1 on banenr state id, period
+
+ banner state
+  period
+  fcc
+  brick_Id
+
+4. left join with IRI datam, fill all null value with 0
+
+5. full join with this banner's data with IQVIA data, where peiroed>= '2020-01-01'
+
+  1. if iri data is NULL replace banner state id with otherbaner, other state id, then use the iqvia value as vlaue
+  2. if sum(iri_value) over(parition by banner_state_id, period, fcc) > 0, sum(iri_value) over(parition by banner_state_id, period, fcc) / count(banner_state_id) over(parition by banner_state_id, period, fcc)\use this value to replace IQIVA value
+
+
+6. use IQVIA data left join IRI_product_Master_client, where peiroed < '2020-01-01'
+1. if iri FCC is NULL replace banner state id with other baner, other state id, then use the iqvia value as vlaue
+2. OTHERWIse no change
+
+
+
+
+  fact_banner_brick_sales_ipo_iqivia
+  fact_banner_brick_sales_ipo_iri
+  fact_banner_brick_sales_ipo_combined
+
+  fact_banner_brick_sales_nip  (no iri banner pannel)
+  Union All
+  fact_banner_brick_sales_ipo_combined  (iri pannel)
+   
+  xyz_dim_Banner
+  xyz_fact_Banner_Brick_Sales
+  
 
 ```{r}
 # 
