@@ -216,9 +216,9 @@ SELECT [attribute_name]
       ,[attribute_name_use]
       ,[sort_order]
 	  ,Case When [attribute_name] = 'fcc' Then ',fcc' 
-	  when name is null then ',Null'
-	  Else ',' + [attribute_name] End 
-	  + ' As ' + [attribute_name_use] as view_columns
+	  when quotename(name) is null then ',Null'
+	  Else ',' + quotename([attribute_name]) End 
+	  + ' As ' + quotename([attribute_name_use]) as view_columns
 	  ,row_number() over(partition by attribute_name_use order by name desc) as rw
   FROM [dbo].[pbi_Product_Attributes_Master] A
   Left outer join
@@ -536,11 +536,11 @@ knitr::kable(df, caption = "Date Dimension Table Columns")
 Some clients have a set of special dates or frequencies to be reported. There are a couple of ways to implement this. The actual implementation will be added later.
 
 
-## Sellin_Scan Dimension Table
+## Sellin_Scanout Dimension Table
 
-This is a very simple dimension table to separate the fact data into sellin and scanout partition. 
+This is a very simple dimension table to separate the fact data into Sellin/Scanout, Monthly/Weekly, and Calendar Year partition combinations. 
 
-To separate the sellin and scanout into different partitions in the fact table renders the different frequency of updates of sellin/scanout data possiple. This means we can update sellin and scanout data in the same fact table in the different cadence without reloading everything. This can save a significant data refreshing time.
+To separate the Sellin/Scanout, Monthly/Weekly, and Calendar Year combinations into different partitions in the fact table renders the different frequency of updates of the fact data possible. This means we can update sellin/scanout and monthly/weekly data in the same fact table at the different cadence without reloading everything. This can save a significant data reloading time and make the Power BI service incremental refreshing possible.
 
 
 ## Store Dimension Table
@@ -638,7 +638,46 @@ knitr::kable(df, caption = "Dim Store Banner State REcord Example")
 
 These Semantic data model only have 3 fact tables:
 
-1. fact_Brick_Banner_Sales: 
+1. fact_Brick_Banner_Sales: this fact table stores the brick banner lever of sales data. The sales data is loaded with the below configuration:
+    + Row-wise:
+        + Monthly
+        + Weekly
+        + Sellin
+        + Scanout
+        + Channel
+    + Column-wise:
+        + Amount
+        + Unit
+        + Baseline Amount
+        + Baseline Unit
+        + Promotion Amount
+        + Promotion Unit
+        + Export Amount
+        + Export Unit
+        + Online Amount (Will not be reported at brick level but state or national level. CWH is separable At national level)
+        + Online Unit (Will not be reported at brick level but state or national level. CWH is separable At national level)
+        
+2. fact_store_sales: this fact table stores the store lever of sales data. The sales data is loaded with the below configuration:
+    + Row-wise:
+        + Monthly
+        + Weekly
+        + Sellin
+        + Scanout
+        + Channel
+    + Column-wise:
+        + Amount
+        + Unit
+        + Baseline Amount
+        + Baseline Unit
+        + Promotion Amount
+        + Promotion Unit
+        + Export Amount
+        + Export Unit
+    + Online sales will need to create dummy store to hold all Non-CWH online sales at state level
+        
+    
+3. fact_iri_grocery_distribuion: more info to be added later
+
 
 ## Storage File Group Consideration
 
