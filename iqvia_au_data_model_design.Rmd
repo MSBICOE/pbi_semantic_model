@@ -3,16 +3,16 @@ title: "IQVIA AU Analytical Semantic Data Model Design Consideration"
 description: |
   The guide for IQVIA AU unified data model design
 author:
-  - name: Steven Wang
-    affiliation: AU Data Science
-  - name: Jun Bai
-    affiliation: AU Data Science
+  - name: AU Data Science Team
+    affiliation: Advanced Data Analytics
 date: "`r Sys.Date()`"
 output: 
   distill::distill_article:
     toc: true
+    toc_float: true
     self_contained: yes
-      
+    code_folding: hide
+
 ---
 
 <style type="text/css">
@@ -272,7 +272,7 @@ mermaid("
     CB--Option 1: Ideal Structure <p> may not practical-->CT(Client Territory)
     RB-.Option 4:<p>Retail Brick to Territory.->CT
     SB-.Option 3:<p>RB to SB to Territory.->CT
-    SB1[Scan Brick.] -.Option 2:<p>Scan Brock to Territory.->CT
+    SB1[Scan Brick.] -.Option 2:<p>Scan Brick to Territory.->CT
     CT-->SG[State Group]
     SG-->AU((National))
     style RB fill:#00b300,stroke:#333,stroke-width:4px;
@@ -540,7 +540,7 @@ Some clients have a set of special dates or frequencies to be reported. There ar
 
 This is a very simple dimension table to separate the fact data into Sellin/Scanout, Monthly/Weekly, and Calendar Year partition combinations. 
 
-To separate the Sellin/Scanout, Monthly/Weekly, and Calendar Year combinations into different partitions in the fact table renders the different frequency of updates of the fact data possible. This means we can update sellin/scanout and monthly/weekly data in the same fact table at the different cadence without reloading everything. This can save a significant data reloading time and make the Power BI service incremental refreshing possible.
+To separate the Sellin/Scanout, Monthly/Weekly, and Calendar Year combinations into different partitions in the fact table renders the different frequency of updates of the fact data possible. This means we can update sellin/scanout and monthly/weekly data in the same fact table at the different cadence without reloading everything. This can save a significant data reloading time and make the Power BI service incremental refreshing possible. Table \@ref(tab:sqsiso) dipects more details about this table.
 
 
 ## Store Dimension Table
@@ -632,6 +632,38 @@ knitr::kable(df, caption = "Dim Store Banner State REcord Example")
 
 ```
 
+# Client Specific Dimension Tables
+
+As the semantic database is designed to share the fact table for all clients, there are a certain dimension tables are shared by all clients and some dimension tables for each client the contents are different.
+
+The dimension tables which are shared by all clients are:
+
+* Dim_Store
+* Dim_Banner_Store_Period
+* Dim_Channel 
+* Dim_Banner (in rare cased, a client might only access to a certain banners, this can be considered later)
+* Dim_Banner_State
+* Dim_State
+* Dim_Brick
+* Dim_Product (Before feeding to PBI Model, the client Dim_Product view will be created and the products are limited by the Dim_Product_Client)
+* Dim_Date_Base (Before feeding to PBI Model, the client Dim_Date_Base view will be created and the Dates are limited by the Dim_Date_Client)
+* Dim_Sellin_Scanout (Before feeding to PBI Model, the client Dim_Sellin_Scanout view will be created and the records are limited by number of years client subscribed to)
+
+
+The dimension tables which are client specific are:
+
+
+* Dim_Product_Client
+* Dim_Date_Client
+* All other dimension tables in the client module
+
+## Client Specific Dimension Table Name convention
+
+
+For consistency and grouping the same client tables together reasons, all client specific tables are named with below name convension:
+
+ClientName_DimensionTableName
+
 
 
 # Fact Table Design Considerations
@@ -644,7 +676,7 @@ These Semantic data model only have 3 fact tables:
         + Weekly
         + Sellin
         + Scanout
-        + Channel
+        + Channel (Retail, Grocery etc.)
     + Column-wise:
         + Amount
         + Unit
@@ -663,7 +695,7 @@ These Semantic data model only have 3 fact tables:
         + Weekly
         + Sellin
         + Scanout
-        + Channel
+        + Channel (Retail, Grocery etc.)
     + Column-wise:
         + Amount
         + Unit
@@ -679,7 +711,15 @@ These Semantic data model only have 3 fact tables:
 3. fact_iri_grocery_distribuion: more info to be added later
 
 
-## Storage File Group Consideration
+## Storage Consideration
+
+Given that the fact table used in this semantic model will have consolidated data, the data size for these fact tables will be huge. We used the different file groups and data files to hold the fact table. 2 filegroups were created for this purpose:
+
+* fg_Fact_Data: to hold the fact brick banner level data
+* fg_Fact_Store: to hold the fact store level data and distribution data
+
+
+
 
 ```{sql sqlFilegroup, connection = con_odbc_iqvia, echo = TRUE, eval = FALSE}
 
@@ -721,8 +761,179 @@ CREATE PARTITION SCHEME [sch_storeSalesPart] AS PARTITION [func_salesPart] All T
 
 ```
 
+Since the row-wise data of the fact table have different update frequency, fact tables are partitioned to take care of the incremental data update for different table partitions. By this design, 6 years of monthly data and 5 years of weekly data will be load into the fact table. The fact tables were partitioned into 22 different partitions based on the following partition keys. Table \@ref(tab:sqsiso) lists all 22 partition keys and ite related attributes.
+
+```{sql sqsiso, connection = con_odbc_iqvia, echo = FALSE, max.print = -1, tab.cap = "Fact Table Partition Keys and its Related Attributes"}
+
+SELECT
+[partition_key]
+,[sales_type]
+,[period_type]
+,[period_year]
+FROM [dbo].[vw_Dim_Sellin_Scanout];
+
+```
+
+## IRI Data Integration
+
+A certain banners, IQVIA doesn't have enough panel stores to make the banner reportable. Currently, these banners include:
+
+* Priceline
+* Good Price Pharmacy
+* National Pharmacies
+
+For these banners, if a client bought the data from other source then we can integrate them into our data and make these banner reportable. Normally, the granular of geography of these banners from IRI is at the state level. This data granular difference has added the data process complexity to integrate the IRI data into our fact table. We will need a process to reverse engineering the data down from state to our brick level. Moreover, there are more complex on the Priceline data, as Priceline data from IRI has a specific start data as in the below table \@ref(tab:sqiripl):
+
+```{sql sqiripl, connection = con_odbc_iqvia, echo = FALSE, max.print = -1, tab.cap = "IRI Priceline data Period Start Date"}
+
+SELECT [banner_id]
+,[period_type]
+,[period_start]
+FROM [dbo].[Admin_Config_IRI_All]
+Where [banner_id] = 'Priceline';
+
+```
+
+The diagram \@ref(fig:iriprocess) shows the overall process flow of IQVIA and IRI data integration.
+
+```{r iriprocess, fig.cap="IRI Data Brick Level Data REEngineering flowchart", , fig.height=13.5, fig.width=6}
+library(DiagrammeR)
+mermaid("
+    graph TB
+    A((IQVIA <p> Data))-- Non-IRI Panel -->B[NIP Data]
+    A-- IRI Panel Only -->C[IPO Data]
+    C-- No IRI Data -->D[IPO ALL IQVIA]
+    D-- Set IPO Baner <p> State ID to -999 -->E[IPO IQVIA Other]
+    C-- Has IRI Data -->F[IPO IQVIA + IRI]
+    G((IRI Data))-->F
+    F-->H>Apply IRI <p> Data Process]
+    H-- Product not in IRI -->I[IPO IQVIA Projected]
+    H-- Propduct in IRI -->J[IPO_IRI]
+    J-- Brick Value Allocation --> O[IPO_IRI Brick]
+    I-- Set IPO Baner <p> State ID to -999 -->K[IPO Other]
+    O-->L[IPO_Combined]
+    K-->L
+    E-.->M>Pick the Data based <p> on IRI Subscription]
+    L-.->M
+    B-->N(IQVIA & IRI Integrated Data)
+    M-->N
+ 
+    style A fill:#0EC8F1,stroke:#333,stroke-width:4px;
+    style B fill:#0EC8F1,stroke:#333,stroke-width:2px;
+    style C fill:#0EC8F1,stroke:#333,stroke-width:4px;
+    style D fill:#0EF1EE;
+    style E fill:#0EF1EE;
+    style F fill:#0EF1EE;
+    style G fill:#F18D0E,stroke:#333,stroke-width:4px;
+    style H fill:#F1EA0E,stroke:#333,stroke-width:2px;
+    style I fill:#0EF1EE,stroke:#333,stroke-width:2px;
+    style J fill:#F18D0E,stroke:#333,stroke-width:2px;
+    style K fill:#0EF1EE,stroke:#333,stroke-width:2px;
+    style L fill:#F18D0E,stroke:#333,stroke-width:2px;
+    style M fill:#F18D0E,stroke:#333,stroke-width:2px;
+    style O fill:#F18D0E,stroke:#333,stroke-width:2px;
+    style N fill:#0EC8F1,stroke:#333,stroke-width:4px;
+    ", height = 850, width = 500)
+```
+
+
+
+### IRI Brick Level Data Allocation Logic
+
+IRI sales data is fed at banner state level. It has the different granular of geography with IQVIA data. A reverse engineering process is established to reallocate banner state level sales data down to banner brick level as in the flow chart Figure \@ref(fig:irireverse):
+
+```{r irireverse, fig.cap="IRI Data Brick Level Data REEngineering flowchart", , fig.height=13, fig.width=6}
+library(DiagrammeR)
+mermaid("
+    graph TB
+    A((IRI <p> Data))-- Get Banner_State+FCC -->B[IRI Unique BS + FCC]
+    C(IQVIA Data IB)-- Inner Join -->B
+    B-- Calc. MAT Brick <p> FCC Contr.% -->D[MAT, BS+FCC <p> Contr. %, Brick Count]
+    B-- Calc. MAT Brick <p> CHC3 Contr.% -->E[MAT, BS+CHC3 <p> Contr. %,Brick Count]
+    B-- Calc. MAT Brick <p> Tot Cat Contr.% -->F[MAT, BS+Tot. Cat. <p> Contr. %,Brick Count]
+    D-->G{FCC Brick <p> Count}
+    E-->H
+    F-->I
+    G-- If <= 3 -->H{CHC3 Brick <p> Count}
+    G-. If > 3 .->J[Use the Contri %]
+    H-. if > 3 .->J
+    H-- If <= 3 -->I{Tot. Cat <p> Brick Count}
+    I-. If > 3 .-J
+    A-- Apply the Brick Ratio -->J
+    J-- Apply Ratio on State Value -->K(IRI Brick Data)
+ 
+    style A fill:#F18D0E,stroke:#333,stroke-width:4px;
+    style B fill:#F1C80E,stroke:#333,stroke-width:2px;
+    style C fill:#0EC8F1,stroke:#333,stroke-width:4px;
+    style D fill:#0EF1EE;
+    style E fill:#0EF1EE;
+    style F fill:#0EF1EE;
+    style G fill:#F1EA0E,stroke:#333,stroke-width:2px;
+    style H fill:#F1EA0E,stroke:#333,stroke-width:2px;
+    style I fill:#F1EA0E,stroke:#333,stroke-width:2px;
+    style J fill:#1aff1a,stroke:#333,stroke-width:2px;
+    style K fill:#F18D0E,stroke:#333,stroke-width:4px;
+    ", height = 800, width = 500)
+```
+
+### IRI Priceline Data Process Consideration
+
+There are a certain rules enforced to take care of the IRI Priceline data integration:
+
+1. **If using IRI Priceline data (when a client purchased from IRI)**
+    + All IQVIA Priceline data before the period cutoff date will be used for the reporting. All IQVIA projected data after the period cutoff date will be discarded.
+    + For all products in IRI Priceline commodity definition
+        + if the sales exists in IQVIA projected data before the period cutoff date, then the IQVIA data will be kept as Priceline banner sales.
+        + if there are products which are not presented in the IRI commodity definition but there are sales captured in IQVIA data, then the banner state id of all such records will be reset to our catch all 'Other Banner Other States', currently it is a value of -999.
+        
+This process sequence is depicted as in the Figure \@ref(fig:iriintseq).        
+        
+```{r iriintseq, layout="l-screen-insert", fig.cap="Data model usage flowchart", fig.height=6}
+library(DiagrammeR)
+mermaid("
+sequenceDiagram
+  participant A as Start Date
+  participant B as PL Data Cutoff Date
+  participant C as End Date
+  A->>B:IQVIA PL Data
+  B->>C:IRI PL Data
+  Note right of B: IRI PL Data
+  B->>C: Apply Brick Sales Allocation logic
+  B->>C:Get the list of IRI Products
+  B-->>C:Check IQVIA Projected PL Data
+  B-->>C:Drop product Sales already in IRI
+  B-->>C: Change Banner State to Other for SKUs Not in IRI
+  Note right of B: IQVIA Other Banner
+  Note right of A: IQVIA PL Data
+  B->>A: Keep Sales for any SKUs in IRI definition
+  B->>A: Change Banner State to Other for SKUs Not in IRI
+  Note right of A: IQVIA PL Data
+  Note right of A: IQVIA Other Banner
+")
+```       
+  
+  <!-- B->>C: Drop IQVIA Data -->
+  
+        
+2. **If using IQVIA Priceline data (when a client didn't purchase from IRI)**
+    + Priceline banner will not be reported as an individual banner.
+    + All Priceline banner sales will go to 'Other Banner Other States' bucket
+        
+
 ## Brick Banner Level Sales Fact Table
 
+### Data Refresh Strategy
+
+Fact table data is updated based on each partition. A partition is like a table. We have predesigned the fact table to use 22 partitions based on the current requirement.
+
+Fact table is not directly updated. Instead, we created fact staging table which has an exactly same table schema as fact table. We load each partition data into the staging fact table then we can simply switch in the table into the Fact table partition. This approach has many benefits. Not only each partition can be updated separately, but also it improved the data refresh efficiency and reduce the process time. The diagram \@ref(fig:incref) illustrates this strategy.
+
+
+```{r incref, layout="l-screen-insert", fig.cap="Incremental Data Refresh Illustration"}
+
+knitr::include_graphics("image/incremental_refresh.PNG")
+
+```
 
 ### Table partition
 
@@ -933,8 +1144,7 @@ return 0;
 ```
 
 
-### Data Refresh Strategy
-
+### Data Refresh Control Process
 
 ```{sql sqlrefreshall, connection = con_odbc_iqvia, echo = TRUE, eval = FALSE}
 CREATE Proc [dbo].[usp_refresh_fact_banner_brick_sales_ALL]
@@ -1047,107 +1257,59 @@ return 0;
 ```
 
 
-partitions:
-
-1. sellin weekly
-2. sellin monthly
-3. scanout weekly
-4. scanout monthly
-
-
-### Scanout Sales Data
-
-### Sellin Sales Data
-
-### Online Sales Data
-
-### Domestic/Exporting Sales Splitting
-
-### Grocery Sales Data
-
-### IRI Sales Data
-
 ### CBG Sales Data Consideration
+
+to be added
 
 ## Store Level Sales Fact Table
 
-### Grocery Store Level Sales Reverse Engineering from Aggregated Grocery Data
+to beadded
 
-### IRI Store Level Sales Reverse Engineering from Aggregated Grocery Data
+# Views Feeding into Power BI Model
+
+Each client will have a sets of views to feed to its Power BI model. These Views for each client have the exactly same schema definition though the contents will be different base on the view definition's join table and where conditions.
+
+Each view will follow the below view name convention:
+
+vw_ClientName_TableName
+
+A complete set of view names for PBI model as below:
+
+
+* vw_ClientName_Dim_Store
+* vw_ClientName_Dim_Banner_Store_Period
+* vw_ClientName_Dim_Banner
+* vw_ClientName_Dim_Banner_State
+* vw_ClientName_Dim_State
+* vw_ClientName_Dim_Brick
+* vw_ClientName_Dim_Product (Base Joining to ClientName_Dim_Product_Client)
+* vw_ClientName_Dim_Date_Base (Only includes the dates in Dim_Date_Client)
+* vw_ClientName_Dim_Sellin_Scanout (Only includes the years in Dim_Date_Client)
+* vw_ClientName_Dim_Product_Client
+* vw_ClientName_Dim_Date_Client
+* vw_ClientName_Other_Client_Dimensions(++)
+* vw_ClientName_Fact_Banner_Brick_Sales (Base Joining to vw_ClientName_Dim_Product, vw_ClientName_Dim_Date_Base)
+* vw_ClientName_Fact_Store_Sales (Base Joining to vw_ClientName_Dim_Product, vw_ClientName_Dim_Date_Base)
+* vw_ClientName_Fact_Grocery_IRI_Distribution
+
+IQVIA is treated as one client of this database. The difference is IQVIA client will use all the data.
 
 
 # Power BI Master Template Design
 
+to be added
+
 ## Power BI Master Data Model
+
+to be added
 
 ## Template Parameter Design
 
+to be added
+
 ## Fact Table Data Partition and Incremental Data Refreshing
 
-
-
-FactBanner_Brick_PL
-FactBanner_Brick_GP
-FactBanner_Brick_NP
-
-1.get banner_state, period, exporting_ratio,and first birckID, from the fact baner _brick sales, table 1
-
-
-2. cartisan join IRI data by:
-  banner state
-  period
-  fcc
-  
-3 inerjoin table 1 on banenr state id, period
-
- banner state
-  period
-  fcc
-  brick_Id
-
-4. left join with IRI datam, fill all null value with 0
-
-5. full join with this banner's data with IQVIA data, where peiroed>= '2020-01-01'
-
-  1. if iri data is NULL replace banner state id with otherbaner, other state id, then use the iqvia value as vlaue
-  2. if sum(iri_value) over(parition by banner_state_id, period, fcc) > 0, sum(iri_value) over(parition by banner_state_id, period, fcc) / count(banner_state_id) over(parition by banner_state_id, period, fcc)\use this value to replace IQIVA value
-
-
-6. use IQVIA data left join IRI_product_Master_client, where peiroed < '2020-01-01'
-1. if iri FCC is NULL replace banner state id with other baner, other state id, then use the iqvia value as vlaue
-2. OTHERWIse no change
-
-
-
-
-  fact_banner_brick_sales_ipo_iqivia
-  fact_banner_brick_sales_ipo_iri
-  fact_banner_brick_sales_ipo_combined
-
-  fact_banner_brick_sales_nip  (no iri banner pannel)
-  Union All
-  fact_banner_brick_sales_ipo_combined  (iri pannel)
-   
-  xyz_dim_Banner
-  xyz_fact_Banner_Brick_Sales
-  
-
-```{r}
-# 
-# library(htmltools)
-# library(flextable)
-# ft <- flextable(head(iris))
-# tab_list <- list()
-# for(i in 1:3){
-#   tab_list[[i]] <- tagList(
-#     tags$h3(paste0("iteration ", i)),
-#     tags$p("JUst for the test pupose"),
-#     htmltools_value(ft)
-#   )
-# }
-# tagList(tab_list)
-# 
-```
+to be added
 
 
 
