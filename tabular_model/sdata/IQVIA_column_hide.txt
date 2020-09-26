@@ -1,0 +1,162 @@
+﻿Col_Names	Row_Count	Col_Name_PBI	To_Hide
+FCC	215359	FCC	0
+PFC	215359	PFC	0
+Active_Ingredient	0	Active Ingredient	1
+Active_Ingredient_1	0	Active Ingredient 1	1
+Active_Ingredient_2	0	Active Ingredient 2	1
+Active_Ingredient_3	0	Active Ingredient 3	1
+Active_Ingredient_4	0	Active Ingredient 4	1
+Additional_Benefit_Claim	0	Additional Benefit Claim	1
+Adult	0	Adult	1
+Age	0	Age	1
+Age_Range	0	Age Range	1
+Age_Target	0	Age Target	1
+Allergy_Type	0	Allergy Type	1
+Analgesic_Base	0	Analgesic Base	1
+APN	0	APN	1
+Application	0	Application	1
+Application_Site	0	Application Site	1
+Aspirin_Dosage	0	Aspirin Dosage	1
+Base_Premium	0	Base Premium	1
+Basic_Specialist	0	Basic Specialist	1
+Benefit	0	Benefit	1
+Brand	214604	Brand	0
+Sub_Brand	0	Sub Brand	1
+Brand_Type	0	Brand Type	1
+Client_Base_Brands	0	Client Base Brands	1
+Category	0	Category	1
+Sub_Category	0	Sub Category	1
+Basic_Specialist_Subcategory	0	Basic Specialist Subcategory	1
+CGP	0	CGP	1
+Channel	0	Channel	1
+Claim	0	Claim	1
+Class	0	Class	1
+Client_Code	0	Client Code	1
+Client_Manufacturer	0	Client Manufacturer	1
+Client_Name	0	Client Name	1
+Client_Number	0	Client Number	1
+Client_Reference	0	Client Reference	1
+Combination_Anesthesia	0	Combination Anesthesia	1
+Competitor	0	Competitor	1
+Consumer	0	Consumer	1
+Cough_Type	0	Cough Type	1
+Day_Night	0	Day Night	1
+Drug_Class	0	Drug Class	1
+Duration	0	Duration	1
+First_Transaction_Date	0	First Transaction Date	1
+Flavour	0	Flavour	1
+Flavour_Type	0	Flavour Type	1
+Form	0	Form	1
+Format	0	Format	1
+Gender	0	Gender	1
+Generic	0	Generic	1
+Generic_Brand	0	Generic Brand	1
+GGP	0	GGP	1
+Gift_Pack	0	Gift Pack	1
+Hypoallergenic_Claim	0	Hypoallergenic Claim	1
+If_PBS_or_Not	0	If PBS or Not	1
+Ingredient_Standard	0	Ingredient Standard	1
+Ingredient_Type	0	Ingredient Type	1
+Iron_Claim	0	Iron Claim	1
+IU	0	IU	1
+Lactose_Claim	0	Lactose Claim	1
+Manufacturer	215359	Manufacturer	0
+Market_Name	0	Market Name	1
+Market_Number	0	Market Number	1
+Medicated_Item	0	Medicated Item	1
+Milk_Source	0	Milk Source	1
+Milk_Type	0	Milk Type	1
+Multipack	0	Multipack	1
+Nicotine_Level	0	Nicotine Level	1
+No_in_Multipack	0	No in Multipack	1
+Number_of_Items_in_Pack	0	Number of Items in Pack	1
+Odourless	0	Odourless	1
+Organic	0	Organic	1
+Organic_Claim	0	Organic Claim	1
+Pack_Long_Name	0	Pack Long Name	1
+Pack_Range	0	Pack Range	1
+Pack_Size	0	Pack Size	1
+Pack_Type	0	Pack Type	1
+Pain_State	0	Pain State	1
+Patch_Form	0	Patch Form	1
+Poison_Schedule	215359	Poison Schedule	0
+Portion	0	Portion	1
+Practitioner	0	Practitioner	1
+Prepack	0	Prepack	1
+Price_Range	0	Price Range	1
+Price_Tier	0	Price Tier	1
+Primary_Usage	0	Primary Usage	1
+Primary_Usage_2	0	Primary Usage 2	1
+Private_Label	0	Private Label	1
+Probiotic	0	Probiotic	1
+Product_Form	0	Product Form	1
+Product_Type	0	Product Type	1
+Protein_Content	0	Protein Content	1
+Segment	0	Segment	1
+Sub_Segment	0	Sub Segment	1
+Sub_Segment_1	0	Sub Segment 1	1
+Sub_Segment_2	0	Sub Segment 2	1
+Sub_Segment_3	0	Sub Segment 3	1
+Client_Segment	0	Client Segment	1
+Global_Segment	0	Global Segment	1
+Pregnancy_Segment	0	Pregnancy Segment	1
+Pregnancy_Sub_Segment	0	Pregnancy Sub Segment	1
+Sensitive_Claim	0	Sensitive Claim	1
+Size	0	Size	1
+Skin_Type	0	Skin Type	1
+Source	0	Source	1
+SPF	0	SPF	1
+Stage	0	Stage	1
+Storage	0	Storage	1
+Strength	0	Strength	1
+Sugar_Free_Claim	0	Sugar Free Claim	1
+Sustain_Release	0	Sustain Release	1
+Target_Consumer	0	Target Consumer	1
+Topical_Corticosteroids_Type	0	Topical Corticosteroids Type	1
+Total_Pregnancy	0	Total Pregnancy	1
+Type	0	Type	1
+Use	0	Use	1
+User	0	User	1
+Product_Ownership	215359	Product Ownership	0
+Product_Name	215359	Product Name	0
+Pack_Name	215197	Pack Name	0
+NEC1_Code	215359	NEC1 Code	0
+NEC1_Desc	215359	NEC1 Desc	0
+NEC2_Code	215359	NEC2 Code	0
+NEC2_Desc	215359	NEC2 Desc	0
+NEC3_Code	215359	NEC3 Code	0
+NEC3_Desc	215359	NEC3 Desc	0
+NEC4_Code	215359	NEC4 Code	0
+NEC4_Desc	215359	NEC4 Desc	0
+CH_Segment_Code	215359	CH Segment Code	0
+CH_Segment_Desc	215359	CH Segment Desc	0
+Consumer_or_Rx	215359	Consumer or Rx	0
+Poison_Schedule_Desc	215359	Poison Schedule Desc	0
+Pack_Launch_Date	215359	Pack Launch Date	0
+Product_Launch_Date	215359	Product Launch Date	0
+Out_of_Trade_Date	215359	Out of Trade Date	0
+Volume_Unit	215359	Volume Unit	0
+Volume_Measure	215359	Volume Measure	0
+Strength_Unit	215359	Strength Unit	0
+Strength_Measure	215359	Strength Measure	0
+Form_Desc_Abbr	215348	Form Desc Abbr	0
+Form_Desc_Long	215320	Form Desc Long	0
+Sundry_Code	215359	Sundry Code	0
+Sundry_Desc	215359	Sundry Desc	0
+Manufacturer_code	215359	Manufacturer code	0
+Manufacturer_Abbr	215359	Manufacturer Abbr	0
+Manufacturer_Long	215329	Manufacturer Long	0
+Price_Reference	215359	Price Reference	0
+Medicine_Type_Code	215359	Medicine Type Code	0
+Medicine_Type_Desc	215359	Medicine Type Desc	0
+Subbrand	214602	Subbrand	0
+CHC1_Code	215359	CHC1 Code	0
+CHC1_Desc	215359	CHC1 Desc	0
+CHC2_Code	215359	CHC2 Code	0
+CHC2_Desc	215359	CHC2 Desc	0
+CHC3_Code	215359	CHC3 Code	0
+CHC3_Desc	215359	CHC3 Desc	0
+CHC4_Code	215359	CHC4 Code	0
+CHC4_Desc	215359	CHC4 Desc	0
+CWH_Rate_Category_Code	215359	CWH Rate Category Code	0
+CWH_Rate_Category_Name	215359	CWH Rate Category Name	0

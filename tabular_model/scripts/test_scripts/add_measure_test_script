@@ -1,0 +1,66 @@
+
+
+// Creates a TOTALYTD measure for every selected measure.
+foreach(var m in Selected.Measures) {
+    var ly_dax_part_1 = "var pt = [const_Selected_Period_Type]\r\n" +
+                        "var currentperiod = [const_Selected_Current_Period]\r\n" +
+                        "var lymat = [const_Selected_Last_MAT_Year]\r\n" +
+                        "var seqmat = [const_Selected_Period_Seq_Mat]\r\n" +
+                        "var lyvalue = calculate(";
+
+    var ly_dax_part_2 = ", filter(all('Dim_Date'), 'Dim_Date'[MAT Year] = lymat && 'Dim_Date'[period_seq_mat] = seqmat && 'Dim_Date'[Period Type] = pt))\r\n" +
+                        "return lyvalue";
+
+    m.Table.AddMeasure(
+    m.Name + " +/- LY",                                       // Name
+        ly_dax_part_1 + m.DaxObjectName + ly_dax_part_2,     // DAX expression
+        "Last Year Metrics"                                        // Display Folder
+    );
+}
+
+var xyz = "var pt = [const_Selected_Period_Type]
+var currentperiod = [const_Selected_Current_Period]
+var lymat = [const_Selected_Last_MAT_Year]
+var seqmat = [const_Selected_Period_Seq_Mat]
+var lyvalue = calculate(" 
+
+
+var ly_dax_part_1 = "var pt = [const_Selected_Period_Type]\r\n" +
+"var currentperiod = [const_Selected_Current_Period]\r\n" +
+"var lymat = [const_Selected_Last_MAT_Year]\r\n" +
+"var seqmat = [const_Selected_Period_Seq_Mat]\r\n" +
+"var lyvalue = calculate(";
+
+var ly_dax_part_2 = ", filter(all('Dim_Date'), 'Dim_Date'[MAT Year] = lymat && 'Dim_Date'[period_seq_mat] = seqmat && 'Dim_Date'[Period Type] = pt))\r\n" +
+"return lyvalue";
+
+
+ly_dax_part_2.Output();
+
+
+var line1 = "First Line"
+    
+line1.output();
+
+
+"hi test".Output();
+string firstName = "Mahesh";
+firstName.
+
+[BB Unit Sales], filter(all('Dim_Date'), 'Dim_Date'[MAT Year] = lymat && 'Dim_Date'[period_seq_mat] = seqmat && 'Dim_Date'[Period Type] = pt))
+return lyvalue
+
+return calculate([Sales_SKU_Product], filter(all('Dim_Period'), Dim_Period[MAT_year] = last_year && 'Dim_Period'[period_seq] = seq && 'Dim_Period'[Period_Type] = p_type))
+
+  var expression = tsvColumns[2].Replace("\"", "").Replace("\\n", String.Empty).Replace("\\r", String.Empty);       // 3rd column contains measure expression
+    //var formattring = tsvColumns[3];
+    //var datatype = tsvColumns[4];
+
+    // This assumes that the model does not already contain a measure with the same name (if it does, the new measure will get a numeric suffix):
+    var measure = targetTable.AddMeasure(name);
+    measure.Description = description;
+    measure.Expression = FormatDax(expression);
+    //measure.FormatString = formatstring;
+
+    
+    var expression = 
