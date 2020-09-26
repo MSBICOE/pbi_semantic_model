@@ -1,0 +1,142 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={The Manual of Excel Data Connector for IQVIA Semantic Data Model},
+            pdfauthor={AU Data Science Team},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{longtable,booktabs}
+\usepackage{graphicx}
+% grffile has become a legacy package: https://ctan.org/pkg/grffile
+\IfFileExists{grffile.sty}{%
+\usepackage{grffile}
+}{}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\providecommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{The Manual of Excel Data Connector for IQVIA Semantic Data Model}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{AU Data Science Team}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{Updated: 2020-09-22}
+
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+\hypertarget{how-to-login}{%
+\section{How to Login?}\label{how-to-login}}
+
+You must install \texttt{Analyze\ in\ Excel\ Updates} from links provided in the Power BI service. Power BI detects the version of Excel you have on your computer, and automatically downloads the appropriate version (32-bit or 64-bit). The Power BI service runs in a browser. You can sign in to the Power BI using the following link:
+
+\begin{itemize}
+\tightlist
+\item
+  \href{https://app.powerbi.com}{Sign in to Power BI}
+\end{itemize}
+
+If you you don't have a Power BI account, you can sign up with your own account for free from the above link. Once you've signed in and the Power BI service is running in your browser, click the down arrow in the upper-right corner and then click Analyze in Excel updates as in the Figure \ref{fig:pbi1}. This menu item applies to new installations of updates of Analyze in Excel.
+
+\begin{figure}
+\includegraphics[width=1\linewidth]{image/pbi1} \caption{Power BI Analyze un Excel Updates download}\label{fig:pbi1}
+\end{figure}
+
+You need to install the download on your local computer. \emph{\textbf{If you don't have permission to install this updates, please seek help from your IT support.}}
+
+IQVIA sill supply a preconfigured Excel workbook for you to connect to your dataset from IQVIA cloud space.
+
+When first time the IQVIA Excel connector workbook is opened, it will display an error message same as the below:
+
+\begin{figure}
+\includegraphics[width=0.6\linewidth]{image/excel_error} \caption{Excel Error Message}\label{fig:login0}
+\end{figure}
+
+If you click OK, it will be prompted for a user name and password to log into the on cloud data service. If the prompt does not appear, please click anywhere inside the pivottable area \textbf{or close the workbook reopen it again.}
+
+Fill in a user name as in the Figure \ref{fig:login1}:
+
+\begin{figure}
+\includegraphics[width=0.8\linewidth]{image/Excel1} \caption{Excel longin username propmt}\label{fig:login1}
+\end{figure}
+
+Fill in a password as in the Figure \ref{fig:login2}:
+
+\begin{figure}
+\includegraphics[width=0.8\linewidth]{image/Excel2} \caption{Excel longin password propmt}\label{fig:login2}
+\end{figure}
+
+
+\end{document}

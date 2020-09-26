@@ -641,7 +641,7 @@ The dimension tables which are shared by all clients are:
 * Dim_Store
 * Dim_Banner_Store_Period
 * Dim_Channel 
-* Dim_Banner (in rare cased, a client might only access to a certain banners, this can be considered later)
+* Dim_Banner
 * Dim_Banner_State
 * Dim_State
 * Dim_Brick
@@ -656,6 +656,12 @@ The dimension tables which are client specific are:
 * Dim_Product_Client
 * Dim_Date_Client
 * All other dimension tables in the client module
+
+The configuration tables which are client specific are:
+
+* Admin_Config_Period
+* Admin_Config_Banner
+
 
 ## Client Specific Dimension Table Name convention
 
@@ -1001,6 +1007,75 @@ WITH (DROP_EXISTING = OFF, COMPRESSION_DELAY = 0) ON [fg_Fact_Data];
 
 ```
 
+
+
+```{sql sqlFactStore, connection = con_odbc_iqvia, echo = TRUE, eval = FALSE}
+
+-- Create fact banner brick sales table for non-IRI panel banners (IQVIA Banner only)
+CREATE TABLE [dbo].[fact_banner_brick_sales_nip] (
+	[partition_key] [int] Not Null,
+	[banner_state_id] [int] Not Null,
+	[brick_id] [int] not Null,
+	[period_id] [int] Not NULL,
+	[fcc] [int] Not NULL,
+	[amount] [bigint] NULL,
+	[unit] [bigint] NULL,
+	[baseline_sales_amount] [bigint] NULL,
+	[baseline_sales_unit] [bigint] NULL,
+	[promotion_sales_amount] [bigint] NULL,
+	[promotion_sales_unit] [bigint] NULL,
+	[export_amount] [bigint] NULL,
+	[export_unit] [bigint] NULL,
+	[online_amount] [bigint] NULL,
+	[online_unit] [bigint] NULL
+) ON [sch_brickSalesPart] (partition_key);
+
+go
+
+CREATE CLUSTERED COLUMNSTORE INDEX [cci_fact_banner_brick_sales_nip] ON [dbo].[fact_banner_brick_sales_nip] 
+WITH (DROP_EXISTING = OFF, COMPRESSION_DELAY = 0) ON [sch_brickSalesPart] (partition_key);
+
+go
+-- Create fact banner brick sales staging table for non-IRI panel banners (IQVIA Banner only)
+CREATE TABLE [dbo].[fact_banner_brick_sales_nip_stage] (
+	[partition_key] [int] Not Null,
+	[banner_state_id] [int] Not Null,
+	[brick_id] [int] not Null,
+	[period_id] [int] Not NULL,
+	[fcc] [int] Not NULL,
+	[amount] [bigint] NULL,
+	[unit] [bigint] NULL,
+	[baseline_sales_amount] [bigint] NULL,
+	[baseline_sales_unit] [bigint] NULL,
+	[promotion_sales_amount] [bigint] NULL,
+	[promotion_sales_unit] [bigint] NULL,
+	[export_amount] [bigint] NULL,
+	[export_unit] [bigint] NULL,
+	[online_amount] [bigint] NULL,
+	[online_unit] [bigint] NULL
+) ON [fg_Fact_Data];
+
+GO
+
+ALTER TABLE [dbo].[fact_banner_brick_sales_nip_stage]  WITH CHECK ADD  CONSTRAINT [chkBBPartID] CHECK  (partition_key > 100 AND partition_key <= 101);
+
+GO
+
+ALTER TABLE [dbo].[fact_banner_brick_sales_nip_stage] CHECK CONSTRAINT [chkBBPartID];
+
+GO
+
+CREATE CLUSTERED COLUMNSTORE INDEX [cci_fact_banner_brick_sales_nip_stage] ON [dbo].[fact_banner_brick_sales_nip_stage] 
+WITH (DROP_EXISTING = OFF, COMPRESSION_DELAY = 0) ON [fg_Fact_Data];
+
+--ALTER TABLE [dbo].[fact_banner_brick_sales_nip_stage]  DROP CONSTRAINT if exists [chkBBPartID];
+--DROP INDEX IF Exists [cci_fact_banner_brick_sales_nip_stage] ON [dbo].[fact_banner_brick_sales_nip_stage];
+
+```
+
+
+
+
 ### Partition Data Switch In/Out
 
 ```{sql sqlrefreshFactBrick, connection = con_odbc_iqvia, echo = TRUE, eval = FALSE}
@@ -1271,26 +1346,29 @@ Each client will have a sets of views to feed to its Power BI model. These Views
 
 Each view will follow the below view name convention:
 
-vw_ClientName_TableName
+**vp_ClientName_TableName**
 
 A complete set of view names for PBI model as below:
 
-
-* vw_ClientName_Dim_Store
-* vw_ClientName_Dim_Banner_Store_Period
-* vw_ClientName_Dim_Banner
-* vw_ClientName_Dim_Banner_State
-* vw_ClientName_Dim_State
-* vw_ClientName_Dim_Brick
-* vw_ClientName_Dim_Product (Base Joining to ClientName_Dim_Product_Client)
-* vw_ClientName_Dim_Date_Base (Only includes the dates in Dim_Date_Client)
-* vw_ClientName_Dim_Sellin_Scanout (Only includes the years in Dim_Date_Client)
-* vw_ClientName_Dim_Product_Client
-* vw_ClientName_Dim_Date_Client
-* vw_ClientName_Other_Client_Dimensions(++)
-* vw_ClientName_Fact_Banner_Brick_Sales (Base Joining to vw_ClientName_Dim_Product, vw_ClientName_Dim_Date_Base)
-* vw_ClientName_Fact_Store_Sales (Base Joining to vw_ClientName_Dim_Product, vw_ClientName_Dim_Date_Base)
-* vw_ClientName_Fact_Grocery_IRI_Distribution
+* vp_ClientName_Date_Year (This is not dimension table but subscription years)
+* vp_ClientName_Dim_Store
+* vp_ClientName_Dim_Banner_Store_Period
+* vp_ClientName_Dim_Banner
+* vp_ClientName_Dim_Banner_State
+<!-- * vp_ClientName_Dim_State -->
+* vp_ClientName_Dim_Brick
+* vp_ClientName_Dim_Product (Base Joining to ClientName_Dim_Product_Client)
+* vp_ClientName_Dim_Date_Base (Only includes the dates in Dim_Date_Client)
+* vp_ClientName_Dim_Sellin_Scanout (Only includes the years in Dim_Date_Client)
+* vp_ClientName_Dim_Product_Client
+* vp_ClientName_Dim_Product_Client_Cols_Display (Each client will have a set of different product attributes to display)
+* vp_ClientName_Dim_Date_Client
+* vp_ClientName_Dim_Client
+* vp_IQVIA_Dim_Client_Subscription
+* vp_ClientName_Other_Client_Dimensions(++)
+* vp_ClientName_Fact_Banner_Brick_Sales (Base Joining to vp_ClientName_Dim_Product, vp_ClientName_Dim_Date_Base)
+* vp_ClientName_Fact_Store_Sales (Base Joining to vp_ClientName_Dim_Product, vp_ClientName_Dim_Date_Base)
+* vp_ClientName_Fact_Grocery_IRI_Distribution
 
 IQVIA is treated as one client of this database. The difference is IQVIA client will use all the data.
 
@@ -1312,6 +1390,84 @@ to be added
 to be added
 
 
+
+
+
+vw_IQVIA_Dim_Banner
+
+
+
+## Excel connection consideration
+
+1. one single point of contacts for IQVIA Excel Connect Admin account from the client side
+2. a nominated user name list from the admin account (the admin account is not administrate the Excel connector directly but acting as a login organiser.)
+3. IQVIA creates the user login and password for the nominated users.
+4. the use account name convention of:
+    + firstname.lastname@iqviaau.onmicrosoft.com
+    + the user will give the first password but it has to be changed by the end user when first time log in.
+5. a monthly email will send from IQVIA to client nominated admin account to confirm if any user need to add or revoke the access.
+6. if a user is left the client organization it is the admin account's responsibility to contact IQVIA for revoking the access for the leaving employee.
+
+
+## The Bayser Excel COnnector Launch function list:
+
+1. Metrics Function groups included
+    + Base Metrics
+    + Baseline /Incremental / Lost
+    + Brick & Mortar / Online
+    + Distribution Metrics
+    + Domestic / Export
+    + Pack Ranging Metrics
+    + Promo / Non Promo
+    + Retail / Grocery
+    + Scanout / Sellin
+2. Period Covered:
+    + Weekly data, 3 years = 156 weeks
+    + Week
+    + 4 Weeks
+    + 13 Weeks
+    + 26 Weeks
+    + 52 Weeks
+    + YTD Weeks
+3. Geography granularity
+    + Base Metrics: Chemist warehouse brick level, and at brick level it can further breakdown to CWH Groups and All Other Banners
+    + Baseline /Incremental / Lost: Only available at banner state level as in MiPortal
+    + Brick & Mortar / Online: Only available at National level, can not go down to any banner, brick level.
+    + Distribution Metrics: 
+        + Only retail pharmacy distribution is available for now.
+        + Priceline is not included as the distribution if from IRI it has different granularity.
+        + The distribution can go down to any CWH brick level, any product level and any period level.
+    + Domestic / Export: Chemist warehouse brick level, and at brick level it can further breakdown to CWH Groups and All Other Banners
+    + Pack Ranging Metrics: Chemist warehouse brick level, and at brick level it can further breakdown to CWH Groups and All Other Banners
+    + Promo / Non Promo: Only available at banner state level as in MiPortal
+    + Retail / Grocery:
+        + Retail:  Chemist warehouse brick level, and at brick level it can further breakdown to CWH Groups and All Other Banners
+        + Grocery: State Level only
+    + Scanout / Sellin: Chemist warehouse brick level, and at brick level it can further breakdown to CWH Groups and All Other Banners
+4. Data refresh frequency
+    + Weekly
+    + Normal refresh time Friday 9:00 AM 
+
+
+
+
+
+## Contribution Metric Calculation Consideration
+
+parent contribution will need to use the excel feature.
+
+1. When there is not period date information involved then
+    + the contribution will be calculated based on the latest period based on the period type
+        + for instance, if the period type is 13 weeks, then the contribution is referring to the latest 13 weeks for the selected attributes combination
+2. when there is period data information involved then
+    + When there is one of or the combination of Date Code, Period Date, Period Long Name, Period Name involved, and **the MAT Year is not in the context**, then the contribution is the combination of other attributes to the selected period
+    + When there is one of or the combination of Date Code, Period Date, Period Long Name, Period Name involved, and **the MAT Year is in the context**, then the contribution is the combination of other attributes to the selected period's corresponding MAT year
+3. When category is involved then the context should be aware of the category
+
+
+## Evolution Index Metric Calculation Consideration
+
+1. 
 
 
 

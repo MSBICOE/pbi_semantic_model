@@ -12,7 +12,13 @@ tagList(tab_list)
 
 
 
+
+
 library(odbc)
+library(forcats)
+library(dplyr)
+library(strex)
+
 drv <- odbc::odbc()
 connection <-  paste0("Driver={SQL Server Native Client 11.0};",    # Drivers
                       "Server=sydssql162d;", # Server Address
@@ -97,7 +103,53 @@ dim_client_subscription <- dbGetQuery(con_odbc_ever,                            
                                   And Source in ('Sell In', 'Sell Out')
                                   And Delivery in ('MiPortal', 'CBG Dashboard')
                                   and DataType not in ('Hospital')
+                                  Union All
+                                  SELECT Distinct
+                                  -1 [ClientNumber]
+                                  ,'IQVIA' As [ClientName]
+                                  ,NUll As [SubscriptionID]
+                                  ,[Subscription]
+                                  ,'2099-12-31' As [SubscriptionEnddate]
+                                  ,Null As [DeliverableID]
+                                  ,NULL [Deliverable]
+                                  ,'2099-12-31' As [DeliveryEndDate]
+                                  ,[Country]
+                                  ,[Service]
+                                  ,[DataType]
+                                  ,[Source]
+                                  ,[Delivery]
+                                  ,[Frequency]
+                                  ,[FrequencyType]
+                                  ,Case When Frequency = 'Monthly' Then '5 Years'
+                                  When Frequency = 'Weekly' Then '3 Years' End As [Period]
+                                  ,NULL As [Restriction]
+                                  ,NULL As[ReportWriterCode]
+                                  ,NULL As[ReportWriterName]
+                                  ,NULL As[MarketID]
+                                  ,NULL As[MarketDimensionID]
+                                  ,NULL As[MiPMktCode]
+                                  FROM  [dbo].[ReportParameter]
+                                  Where [FrequencyType] in ('Monthly', 'Weekly')
+                                  and [Service] in ('Scan', 'Profits', 'Probe')
+                                  And Source in ('Sell In', 'Sell Out')
+                                  And Delivery in ('MiPortal', 'CBG Dashboard')
+                                  and DataType not in ('Hospital')
                                       ")
+
+
+dim_client_subscription <- dim_client_subscription %>% 
+  mutate(Source = fct_recode(Source,
+                             "Sellin" = "Sell In",
+                             "Scanout" = "Sell Out"),
+         period_span = str_first_number(Period),
+         period_unit = str_trim(str_first_non_numeric(Period))) %>% 
+  mutate(period_span = case_when(period_unit == "Weeks" ~ ceiling(period_span / 52),
+                                 period_unit == "Months" ~ ceiling(period_span / 12),
+                                 TRUE ~ period_span
+                                 ),
+         period_unit = case_when(period_unit %in% c("Weeks", "Months") ~ "Years",
+                                 TRUE ~ period_unit
+         ))
 
 
 
@@ -112,8 +164,8 @@ try(dbRemoveTable(con_odbc_iqvia, 'Admin_Config_Period_All'), TRUE)
 system.time(dbWriteTable(con_odbc_iqvia, 'Admin_Config_Period_All', as.data.frame(period_hierarchy )))
 
 
-try(dbRemoveTable(con_odbc_iqvia, 'dim_product'), TRUE)
-system.time(dbWriteTable(con_odbc_iqvia, 'dim_product', as.data.frame(dim_product)))
+# try(dbRemoveTable(con_odbc_iqvia, 'dim_product'), TRUE)
+# system.time(dbWriteTable(con_odbc_iqvia, 'dim_product', as.data.frame(dim_product)))
 
 
 try(dbRemoveTable(con_odbc_iqvia, 'dim_store'), TRUE)
@@ -131,6 +183,19 @@ try(dbRemoveTable(con_odbc_iqvia, 'dim_client_subscription'), TRUE)
 system.time(dbWriteTable(con_odbc_iqvia, 'dim_client_subscription', as.data.frame(dim_client_subscription)))
 
 
+
+## move bayer consumer products
+bayerch_prod <- dbGetQuery(con_odbc_pcust,"SELECT * FROM vw_BayerConsumer_Dim_Product_Client")
+try(dbRemoveTable(con_odbc_iqvia, 'BayerConsumer_dim_product_client'), TRUE)
+system.time(dbWriteTable(con_odbc_iqvia, 'BayerConsumer_dim_product_client', as.data.frame(bayerch_prod)))
+
+## move Sanofi products
+sanofi_prod <- dbGetQuery(con_odbc_pcust,"SELECT * FROM vw_Sanofi_Dim_Product_Client")
+try(dbRemoveTable(con_odbc_iqvia, 'Sanofi_dim_product_client'), TRUE)
+system.time(dbWriteTable(con_odbc_iqvia, 'Sanofi_dim_product_client', as.data.frame(sanofi_prod)))
+
+
+
 dbDisconnect(con_odbc)
 
 dbDisconnect(con_odbc_iqvia)
@@ -138,6 +203,7 @@ dbDisconnect(con_odbc_iqvia)
 dbDisconnect(con_odbc_pcust)
 
 dbDisconnect(con_odbc_ever)
+
 
 
 
