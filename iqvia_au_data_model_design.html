@@ -25,8 +25,8 @@
   
   
   <!--  https://schema.org/Article -->
-  <meta property="article:published" itemprop="datePublished" content="2020-09-25" />
-  <meta property="article:created" itemprop="dateCreated" content="2020-09-25" />
+  <meta property="article:published" itemprop="datePublished" content="2020-10-21" />
+  <meta property="article:created" itemprop="dateCreated" content="2020-10-21" />
   <meta name="article:author" content="AU Data Science Team" />
   
   <!--  https://developers.facebook.com/docs/sharing/webmasters#markup -->
@@ -44,7 +44,7 @@
   <!--radix_placeholder_rmarkdown_metadata-->
   
   <script type="text/json" id="radix-rmarkdown-metadata">
-  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","author","date","output"]}},"value":[{"type":"character","attributes":{},"value":["IQVIA AU Analytical Semantic Data Model Design Consideration"]},{"type":"character","attributes":{},"value":["The guide for IQVIA AU unified data model design\n"]},{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","affiliation"]}},"value":[{"type":"character","attributes":{},"value":["AU Data Science Team"]},{"type":"character","attributes":{},"value":["Advanced Data Analytics"]}]}]},{"type":"character","attributes":{},"value":["2020-09-25"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["toc","toc_float","self_contained","code_folding"]}},"value":[{"type":"logical","attributes":{},"value":[true]},{"type":"logical","attributes":{},"value":[true]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["hide"]}]}]}]}
+  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","author","date","output"]}},"value":[{"type":"character","attributes":{},"value":["IQVIA AU Analytical Semantic Data Model Design Consideration"]},{"type":"character","attributes":{},"value":["The guide for IQVIA AU unified data model design\n"]},{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","affiliation"]}},"value":[{"type":"character","attributes":{},"value":["AU Data Science Team"]},{"type":"character","attributes":{},"value":["Advanced Data Analytics"]}]}]},{"type":"character","attributes":{},"value":["2020-10-21"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["toc","toc_float","self_contained","code_folding"]}},"value":[{"type":"logical","attributes":{},"value":[true]},{"type":"logical","attributes":{},"value":[true]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["hide"]}]}]}]}
   </script>
   <!--/radix_placeholder_rmarkdown_metadata-->
   
@@ -4502,7 +4502,7 @@ distill-header .nav a {
 <!--radix_placeholder_front_matter-->
 
 <script id="distill-front-matter" type="text/json">
-{"title":"IQVIA AU Analytical Semantic Data Model Design Consideration","description":"The guide for IQVIA AU unified data model design","authors":[{"author":"AU Data Science Team","authorURL":"#","affiliation":"Advanced Data Analytics","affiliationURL":"#"}],"publishedDate":"2020-09-25T00:00:00.000+10:00","citationText":"Team, 2020"}
+{"title":"IQVIA AU Analytical Semantic Data Model Design Consideration","description":"The guide for IQVIA AU unified data model design","authors":[{"author":"AU Data Science Team","authorURL":"#","affiliation":"Advanced Data Analytics","affiliationURL":"#"}],"publishedDate":"2020-10-21T00:00:00.000+11:00","citationText":"Team, 2020"}
 </script>
 
 <!--/radix_placeholder_front_matter-->
@@ -4519,7 +4519,7 @@ distill-header .nav a {
 <div class="d-byline">
   AU Data Science Team  (Advanced Data Analytics)
   
-<br />2020-09-25
+<br />2020-10-21
 </div>
 
 <div class="d-article">
@@ -4586,6 +4586,7 @@ distill-header .nav a {
 <li><a href="#contribution-metric-calculation-consideration">Contribution Metric Calculation Consideration</a></li>
 <li><a href="#evolution-index-metric-calculation-consideration">Evolution Index Metric Calculation Consideration</a></li>
 </ul></li>
+<li><a href="#iri-data-is-client-specific">IRI Data is Client Specific</a></li>
 </ul>
 </nav>
 <hr class="d-toc-separator" />
@@ -4610,8 +4611,8 @@ distill-header .nav a {
 <p>Each client’s Power BI workbook will be published to its own Power BI Premium workspace.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="figure"><span id="fig:modelflow"></span>
-<div id="htmlwidget-87cac438b0fd47323f7a" style="width:700px;height:500px;" class="DiagrammeR html-widget"></div>
-<script type="application/json" data-for="htmlwidget-87cac438b0fd47323f7a">{"x":{"diagram":"\n    graph TB\n    C(Centrlized Single DB)-- Create -->V1[Client 1 Views]\n    C-- Create -->V2[Client 2 Views]\n    C-- Create -->V4[IQVIA Views]\n    V1-- Feed Data -->P(PBI Master Model)\n    V2-- Feed Data -->P\n    V4-- Feed Data -->P\n    P-- Apply Model -->M1[Client 1 PBI]\n    P-- Apply Model -->M2[Client 2 PBI]\n    P-- Apply Model -->M4[IQVIA PBI]\n    M1-- Publish to -->W1[Client 1 Workspace]\n    M2-- Publish to -->W2[Client 2 Workspace]\n    M4-- Publish to -->W4[IQVIA Workspace]\n    W1-- Embedded in -->Mi(MiPortal)\n    W2-- Embedded in -->Mi\n    W4-- Embedded in -->Mi\n    W1-. Analysing in .->U(User Tools On Premise)\n    W2-. Analysing in .->U\n    W4-. Analysing in .->U\n    style C fill:#00b300,stroke:#333,stroke-width:4px;\n    style Mi fill:#00b300,stroke:#333,stroke-width:4px;\n    style P fill:#1aff1a,stroke:#333,stroke-width:2px;\n    style V4 fill:#E59925;\n    style M4 fill:#E59925;\n    style W4 fill:#E59925;\n    style U fill:#F1EA0E,stroke:#333,stroke-width:4px;\n    "},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-f5ecea580aeb2dee153c" style="width:700px;height:500px;" class="DiagrammeR html-widget"></div>
+<script type="application/json" data-for="htmlwidget-f5ecea580aeb2dee153c">{"x":{"diagram":"\n    graph TB\n    C(Centrlized Single DB)-- Create -->V1[Client 1 Views]\n    C-- Create -->V2[Client 2 Views]\n    C-- Create -->V4[IQVIA Views]\n    V1-- Feed Data -->P(PBI Master Model)\n    V2-- Feed Data -->P\n    V4-- Feed Data -->P\n    P-- Apply Model -->M1[Client 1 PBI]\n    P-- Apply Model -->M2[Client 2 PBI]\n    P-- Apply Model -->M4[IQVIA PBI]\n    M1-- Publish to -->W1[Client 1 Workspace]\n    M2-- Publish to -->W2[Client 2 Workspace]\n    M4-- Publish to -->W4[IQVIA Workspace]\n    W1-- Embedded in -->Mi(MiPortal)\n    W2-- Embedded in -->Mi\n    W4-- Embedded in -->Mi\n    W1-. Analysing in .->U(User Tools On Premise)\n    W2-. Analysing in .->U\n    W4-. Analysing in .->U\n    style C fill:#00b300,stroke:#333,stroke-width:4px;\n    style Mi fill:#00b300,stroke:#333,stroke-width:4px;\n    style P fill:#1aff1a,stroke:#333,stroke-width:2px;\n    style V4 fill:#E59925;\n    style M4 fill:#E59925;\n    style W4 fill:#E59925;\n    style U fill:#F1EA0E,stroke:#333,stroke-width:4px;\n    "},"evals":[],"jsHooks":[]}</script>
 <p class="caption">
 Figure 1: Data model usage flowchart
 </p>
@@ -6175,6 +6176,19 @@ multipack
 </tr>
 <tr>
 <td style="text-align:left;">
+,Null As [Need_State]
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:right;">
+7500
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
 ,Null As [Nicotine_Level]
 </td>
 <td style="text-align:left;">
@@ -7045,8 +7059,8 @@ Available value: Retail Brick, Scan Brick, CWH Brick
 <p>Ideally, all brick structure used should be roll up to any client territory. When a brick structure is in line with a client territory structure it is most valuable for client reporting purpose. Figure <span class="citation" data-cites="ref">@ref</span>(fig:brickhr) depicts the ideal brick rollup hierarchy structure.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="figure"><span id="fig:brickhr"></span>
-<div id="htmlwidget-eea75d17f53a6cbfd79a" style="width:700px;height:700px;" class="DiagrammeR html-widget"></div>
-<script type="application/json" data-for="htmlwidget-eea75d17f53a6cbfd79a">{"x":{"diagram":"\n    graph TD\n    RB[Retail Brick]-->SB[Scan Brick]\n    SB-->CB[CWH Brick]\n    CB--Option 1: Ideal Structure <p> may not practical-->CT(Client Territory)\n    RB-.Option 4:<p>Retail Brick to Territory.->CT\n    SB-.Option 3:<p>RB to SB to Territory.->CT\n    SB1[Scan Brick.] -.Option 2:<p>Scan Brick to Territory.->CT\n    CT-->SG[State Group]\n    SG-->AU((National))\n    style RB fill:#00b300,stroke:#333,stroke-width:4px;\n    style SB fill:#00ffff,stroke:#333,stroke-width:2px;\n    style SB1 fill:#00ffff,stroke:#333,stroke-width:4px;\n    style CB fill:#99ccff,stroke:#333,stroke-width:2px;\n    style CT fill:#f96,color:#fff,stroke:#333,stroke-width:2px;\n    style SG fill:#99cc00,stroke:#333,stroke-width:2px;\n    style AU fill:#F1EA0E,stroke:#333,stroke-width:4px;\n    "},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-5691982cabc529fb7d63" style="width:700px;height:700px;" class="DiagrammeR html-widget"></div>
+<script type="application/json" data-for="htmlwidget-5691982cabc529fb7d63">{"x":{"diagram":"\n    graph TD\n    RB[Retail Brick]-->SB[Scan Brick]\n    SB-->CB[CWH Brick]\n    CB--Option 1: Ideal Structure <p> may not practical-->CT(Client Territory)\n    RB-.Option 4:<p>Retail Brick to Territory.->CT\n    SB-.Option 3:<p>RB to SB to Territory.->CT\n    SB1[Scan Brick.] -.Option 2:<p>Scan Brick to Territory.->CT\n    CT-->SG[State Group]\n    SG-->AU((National))\n    style RB fill:#00b300,stroke:#333,stroke-width:4px;\n    style SB fill:#00ffff,stroke:#333,stroke-width:2px;\n    style SB1 fill:#00ffff,stroke:#333,stroke-width:4px;\n    style CB fill:#99ccff,stroke:#333,stroke-width:2px;\n    style CT fill:#f96,color:#fff,stroke:#333,stroke-width:2px;\n    style SG fill:#99cc00,stroke:#333,stroke-width:2px;\n    style AU fill:#F1EA0E,stroke:#333,stroke-width:4px;\n    "},"evals":[],"jsHooks":[]}</script>
 <p class="caption">
 Figure 3: IQVIA Brick Hierarchy Structure Options
 </p>
@@ -7062,8 +7076,8 @@ Figure 3: IQVIA Brick Hierarchy Structure Options
 <p>At the state level, all state reportable banners can be reported.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="figure"><span id="fig:cwbrickhr"></span>
-<div id="htmlwidget-b97f2fa79a960208a7f5" style="width:700px;height:350px;" class="DiagrammeR html-widget"></div>
-<script type="application/json" data-for="htmlwidget-b97f2fa79a960208a7f5">{"x":{"diagram":"\n    graph LR\n    CB[CWH Brick]-->SG[State Group]\n    SG-->AU((National))\n    subgraph Brick_Reportable_Banners\n    B1[CWH Group]\n    B2[All Other Banners]\n    end\n    subgraph State_Reportable_Banners\n    RB[All Reportable Banners]\n    end\n    CB-.->B1\n    CB-.->B2\n    SG-.->RB\n    style CB fill:#99ccff,stroke:#333,stroke-width:4px;\n    style SG fill:#99cc00,stroke:#333,stroke-width:2px;\n    style AU fill:#F1EA0E,stroke:#333,stroke-width:4px;\n    "},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-b54a8099883ef927e20d" style="width:700px;height:350px;" class="DiagrammeR html-widget"></div>
+<script type="application/json" data-for="htmlwidget-b54a8099883ef927e20d">{"x":{"diagram":"\n    graph LR\n    CB[CWH Brick]-->SG[State Group]\n    SG-->AU((National))\n    subgraph Brick_Reportable_Banners\n    B1[CWH Group]\n    B2[All Other Banners]\n    end\n    subgraph State_Reportable_Banners\n    RB[All Reportable Banners]\n    end\n    CB-.->B1\n    CB-.->B2\n    SG-.->RB\n    style CB fill:#99ccff,stroke:#333,stroke-width:4px;\n    style SG fill:#99cc00,stroke:#333,stroke-width:2px;\n    style AU fill:#F1EA0E,stroke:#333,stroke-width:4px;\n    "},"evals":[],"jsHooks":[]}</script>
 <p class="caption">
 Figure 4: Current implementation of CWH Brick to State Group
 </p>
@@ -7756,6 +7770,20 @@ Week
 YtdWk
 </td>
 </tr>
+<tr>
+<td style="text-align:left;">
+Week
+</td>
+<td style="text-align:left;">
+<span style="     color: red !important;">YTDWeekFullYear</span>
+</td>
+<td style="text-align:left;">
+<span style="     color: red !important;">-5</span>
+</td>
+<td style="text-align:left;">
+YtdWkFY
+</td>
+</tr>
 </tbody>
 <tfoot>
 <tr>
@@ -7838,7 +7866,7 @@ Date Value Example
 period_id
 </td>
 <td style="text-align:left;">
-2017040101
+2020090101
 </td>
 </tr>
 <tr>
@@ -7854,7 +7882,7 @@ Month
 period_start
 </td>
 <td style="text-align:left;">
-2017-04-01
+2020-09-01
 </td>
 </tr>
 <tr>
@@ -7862,7 +7890,7 @@ period_start
 period_end
 </td>
 <td style="text-align:left;">
-2017-04-30
+2020-09-30
 </td>
 </tr>
 </tbody>
@@ -7900,13 +7928,13 @@ Value Example 3
 period_id
 </td>
 <td style="text-align:left;">
-2019060101
+2016101602
 </td>
 <td style="text-align:left;">
-2018011402
+2018123002
 </td>
 <td style="text-align:left;">
-2018092302
+2016080101
 </td>
 </tr>
 <tr>
@@ -7914,13 +7942,13 @@ period_id
 period_base
 </td>
 <td style="text-align:left;">
+Week
+</td>
+<td style="text-align:left;">
+Week
+</td>
+<td style="text-align:left;">
 Month
-</td>
-<td style="text-align:left;">
-Week
-</td>
-<td style="text-align:left;">
-Week
 </td>
 </tr>
 <tr>
@@ -7928,13 +7956,13 @@ Week
 period_type
 </td>
 <td style="text-align:left;">
+YTDWeekFullYear
+</td>
+<td style="text-align:left;">
+YTDWeek
+</td>
+<td style="text-align:left;">
 Quarter
-</td>
-<td style="text-align:left;">
-Week
-</td>
-<td style="text-align:left;">
-Week
 </td>
 </tr>
 <tr>
@@ -7942,13 +7970,13 @@ Week
 period_type_short
 </td>
 <td style="text-align:left;">
+YtdWkFY
+</td>
+<td style="text-align:left;">
+YtdWk
+</td>
+<td style="text-align:left;">
 Qtr
-</td>
-<td style="text-align:left;">
-Wk
-</td>
-<td style="text-align:left;">
-Wk
 </td>
 </tr>
 <tr>
@@ -7956,13 +7984,13 @@ Wk
 period_start_min
 </td>
 <td style="text-align:left;">
-2019-04-01
+2016-07-24
 </td>
 <td style="text-align:left;">
-2018-01-14
+2018-12-30
 </td>
 <td style="text-align:left;">
-2018-09-23
+2016-07-01
 </td>
 </tr>
 <tr>
@@ -7970,13 +7998,13 @@ period_start_min
 period_start_max
 </td>
 <td style="text-align:left;">
-2019-06-01
+2016-12-25
 </td>
 <td style="text-align:left;">
-2018-01-14
+2019-09-29
 </td>
 <td style="text-align:left;">
-2018-09-23
+2016-09-01
 </td>
 </tr>
 <tr>
@@ -7984,13 +8012,13 @@ period_start_max
 period_end_min
 </td>
 <td style="text-align:left;">
-2019-04-30
+2016-07-30
 </td>
 <td style="text-align:left;">
-2018-01-20
+2019-01-05
 </td>
 <td style="text-align:left;">
-2018-09-29
+2016-07-31
 </td>
 </tr>
 <tr>
@@ -7998,13 +8026,13 @@ period_end_min
 period_end_max
 </td>
 <td style="text-align:left;">
-2019-06-30
+2016-12-31
 </td>
 <td style="text-align:left;">
-2018-01-20
+2019-10-05
 </td>
 <td style="text-align:left;">
-2018-09-29
+2016-09-30
 </td>
 </tr>
 <tr>
@@ -8012,13 +8040,13 @@ period_end_max
 period_type_order
 </td>
 <td style="text-align:left;">
+4
+</td>
+<td style="text-align:left;">
+4
+</td>
+<td style="text-align:left;">
 1
-</td>
-<td style="text-align:left;">
-4
-</td>
-<td style="text-align:left;">
-4
 </td>
 </tr>
 <tr>
@@ -8026,13 +8054,13 @@ period_type_order
 period_date
 </td>
 <td style="text-align:left;">
-2019-06-30
+2016-12-31
 </td>
 <td style="text-align:left;">
-2018-01-20
+2019-10-05
 </td>
 <td style="text-align:left;">
-2018-09-29
+2016-09-30
 </td>
 </tr>
 <tr>
@@ -8040,13 +8068,13 @@ period_date
 period_name
 </td>
 <td style="text-align:left;">
-Qtr 2019/06/30
+YtdWkFY 2016/12/31
 </td>
 <td style="text-align:left;">
-Wk 2018/01/20
+YtdWk 2019/10/05
 </td>
 <td style="text-align:left;">
-Wk 2018/09/29
+Qtr 2016/09/30
 </td>
 </tr>
 <tr>
@@ -8054,13 +8082,13 @@ Wk 2018/09/29
 period_long_name
 </td>
 <td style="text-align:left;">
-Qtr 2019/04/01 : 2019/06/30
+YtdWkFY 2016/07/24 : 2016/12/31
 </td>
 <td style="text-align:left;">
-Wk 2018/01/14 : 2018/01/20
+YtdWk 2018/12/30 : 2019/10/05
 </td>
 <td style="text-align:left;">
-Wk 2018/09/23 : 2018/09/29
+Qtr 2016/07/01 : 2016/09/30
 </td>
 </tr>
 <tr>
@@ -8068,13 +8096,13 @@ Wk 2018/09/23 : 2018/09/29
 period_year
 </td>
 <td style="text-align:left;">
+2016
+</td>
+<td style="text-align:left;">
 2019
 </td>
 <td style="text-align:left;">
-2018
-</td>
-<td style="text-align:left;">
-2018
+2016
 </td>
 </tr>
 <tr>
@@ -8082,13 +8110,13 @@ period_year
 period_code
 </td>
 <td style="text-align:left;">
-2
+NA
+</td>
+<td style="text-align:left;">
+NA
 </td>
 <td style="text-align:left;">
 3
-</td>
-<td style="text-align:left;">
-39
 </td>
 </tr>
 <tr>
@@ -8096,13 +8124,13 @@ period_code
 period_code_name
 </td>
 <td style="text-align:left;">
-Q 2
+NA
 </td>
 <td style="text-align:left;">
-Week 3
+NA
 </td>
 <td style="text-align:left;">
-Week 39
+Q 3
 </td>
 </tr>
 <tr>
@@ -8110,13 +8138,13 @@ Week 39
 date_code
 </td>
 <td style="text-align:left;">
-20190630
+20161231
 </td>
 <td style="text-align:left;">
-20180120
+20191005
 </td>
 <td style="text-align:left;">
-20180929
+20160930
 </td>
 </tr>
 <tr>
@@ -8138,13 +8166,13 @@ current_year
 period_order
 </td>
 <td style="text-align:left;">
+80
+</td>
+<td style="text-align:left;">
+70
+</td>
+<td style="text-align:left;">
 6
-</td>
-<td style="text-align:left;">
-20
-</td>
-<td style="text-align:left;">
-20
 </td>
 </tr>
 <tr>
@@ -8152,13 +8180,13 @@ period_order
 periods
 </td>
 <td style="text-align:left;">
+-5
+</td>
+<td style="text-align:left;">
+-4
+</td>
+<td style="text-align:left;">
 -3
-</td>
-<td style="text-align:left;">
-1
-</td>
-<td style="text-align:left;">
-1
 </td>
 </tr>
 <tr>
@@ -8166,13 +8194,13 @@ periods
 mat_year
 </td>
 <td style="text-align:left;">
-2019
-</td>
-<td style="text-align:left;">
-2018
+2017
 </td>
 <td style="text-align:left;">
 2019
+</td>
+<td style="text-align:left;">
+2016
 </td>
 </tr>
 <tr>
@@ -8180,13 +8208,13 @@ mat_year
 period_seq
 </td>
 <td style="text-align:left;">
-5
+4
 </td>
 <td style="text-align:left;">
-138
+1
 </td>
 <td style="text-align:left;">
-102
+16
 </td>
 </tr>
 <tr>
@@ -8194,13 +8222,13 @@ period_seq
 period_seq_mat
 </td>
 <td style="text-align:left;">
-2
+1
 </td>
 <td style="text-align:left;">
-34
+1
 </td>
 <td style="text-align:left;">
-50
+1
 </td>
 </tr>
 <tr>
@@ -8208,13 +8236,13 @@ period_seq_mat
 period_sequence_name
 </td>
 <td style="text-align:left;">
-Quarter -5
+YTDWeekFullYear -4
 </td>
 <td style="text-align:left;">
-Week -138
+YTDWeek -1
 </td>
 <td style="text-align:left;">
-Week -102
+Quarter -16
 </td>
 </tr>
 <tr>
@@ -8222,13 +8250,13 @@ Week -102
 periods_count
 </td>
 <td style="text-align:left;">
+23
+</td>
+<td style="text-align:left;">
+40
+</td>
+<td style="text-align:left;">
 3
-</td>
-<td style="text-align:left;">
-1
-</td>
-<td style="text-align:left;">
-1
 </td>
 </tr>
 </tbody>
@@ -8280,10 +8308,10 @@ Value Example 2
 eid
 </td>
 <td style="text-align:left;">
-679015423
+677311168
 </td>
 <td style="text-align:left;">
-672259054
+670001284
 </td>
 </tr>
 <tr>
@@ -8291,10 +8319,10 @@ eid
 Name
 </td>
 <td style="text-align:left;">
-TWC Highfields
+Ken Lai Pharmacy
 </td>
 <td style="text-align:left;">
-Berkeley Vale Pharmacy
+Labrador Park Chemist
 </td>
 </tr>
 <tr>
@@ -8302,10 +8330,10 @@ Berkeley Vale Pharmacy
 full_address
 </td>
 <td style="text-align:left;">
-Shop 1 Highfields Village Rogers Road HIGHFIELDS
+3 Annie Street CABOOLTURE
 </td>
 <td style="text-align:left;">
-252 Lakedge Avenue BERKELEY VALE
+Shop 11-12/ 100 Brisbane Road LABRADOR
 </td>
 </tr>
 <tr>
@@ -8313,10 +8341,10 @@ Shop 1 Highfields Village Rogers Road HIGHFIELDS
 suburb
 </td>
 <td style="text-align:left;">
-HIGHFIELDS
+CABOOLTURE
 </td>
 <td style="text-align:left;">
-BERKELEY VALE
+LABRADOR
 </td>
 </tr>
 <tr>
@@ -8324,10 +8352,10 @@ BERKELEY VALE
 postcode
 </td>
 <td style="text-align:left;">
-4352
+4510
 </td>
 <td style="text-align:left;">
-2261
+4215
 </td>
 </tr>
 <tr>
@@ -8336,11 +8364,11 @@ phone
 </td>
 <td style="text-align:left;">
 <ol start="7" type="1">
-<li>4615 4426
+<li>5495 2300
 </td>
 <td style="text-align:left;">
-<ol start="2" type="1">
-<li>4388 2323
+<ol start="7" type="1">
+<li>5537 6018
 </td>
 </tr>
 <tr>
@@ -8348,10 +8376,10 @@ phone
 longitude
 </td>
 <td style="text-align:left;">
-151.9431
+152.9500
 </td>
 <td style="text-align:left;">
-151.4377
+153.3974
 </td>
 </tr>
 <tr>
@@ -8359,10 +8387,10 @@ longitude
 latitude
 </td>
 <td style="text-align:left;">
--27.45063
+-27.08294
 </td>
 <td style="text-align:left;">
--33.33969
+-27.93566
 </td>
 </tr>
 <tr>
@@ -8381,10 +8409,10 @@ Retail Pharmacy
 banner_current
 </td>
 <td style="text-align:left;">
-Terry White Chemmart
+API Club Premium
 </td>
 <td style="text-align:left;">
-Independent
+API Club Premium
 </td>
 </tr>
 <tr>
@@ -8392,10 +8420,10 @@ Independent
 retail_brick
 </td>
 <td style="text-align:left;">
-43520
+45100
 </td>
 <td style="text-align:left;">
-22610
+42151
 </td>
 </tr>
 <tr>
@@ -8403,10 +8431,10 @@ retail_brick
 retail_brick_name
 </td>
 <td style="text-align:left;">
-HIGHFIELDS +
+CABOOLTURE
 </td>
 <td style="text-align:left;">
-ENTCE-VALE
+STHPRT-LBDR+
 </td>
 </tr>
 <tr>
@@ -8414,10 +8442,10 @@ ENTCE-VALE
 scan_brick
 </td>
 <td style="text-align:left;">
-43520
+45100
 </td>
 <td style="text-align:left;">
-22610
+42151
 </td>
 </tr>
 <tr>
@@ -8425,10 +8453,10 @@ scan_brick
 scan_brick_name
 </td>
 <td style="text-align:left;">
-HIGHFIELDS +
+CABOOLTURE
 </td>
 <td style="text-align:left;">
-ENTCE-VALE
+STHPRT-LBDR+
 </td>
 </tr>
 <tr>
@@ -8436,10 +8464,10 @@ ENTCE-VALE
 cwh_brick
 </td>
 <td style="text-align:left;">
-43059
+40209
 </td>
 <td style="text-align:left;">
-22509
+42159
 </td>
 </tr>
 <tr>
@@ -8447,10 +8475,10 @@ cwh_brick
 cwh_brick_name
 </td>
 <td style="text-align:left;">
-CWH IPSWICH
+CWH REDCLIFFE
 </td>
 <td style="text-align:left;">
-CWH ERINA
+CWH SOUTHPORT
 </td>
 </tr>
 <tr>
@@ -8472,7 +8500,7 @@ state_code
 QLD
 </td>
 <td style="text-align:left;">
-NSW
+QLD
 </td>
 </tr>
 <tr>
@@ -8502,10 +8530,10 @@ Retail Pharmacy
 lga_code
 </td>
 <td style="text-align:left;">
-36910
+35010
 </td>
 <td style="text-align:left;">
-11650
+33430
 </td>
 </tr>
 <tr>
@@ -8513,10 +8541,10 @@ lga_code
 lga_name
 </td>
 <td style="text-align:left;">
-Toowoomba (R)
+Moreton Bay (R)
 </td>
 <td style="text-align:left;">
-Central Coast (C) (NSW)
+Gold Coast (C)
 </td>
 </tr>
 <tr>
@@ -8527,7 +8555,7 @@ lga_state
 QLD
 </td>
 <td style="text-align:left;">
-NSW
+QLD
 </td>
 </tr>
 <tr>
@@ -8538,7 +8566,7 @@ lga_state_original
 QLD
 </td>
 <td style="text-align:left;">
-NSW
+QLD
 </td>
 </tr>
 <tr>
@@ -8546,7 +8574,7 @@ NSW
 remoteness
 </td>
 <td style="text-align:left;">
-Inner Regional
+Major Cities
 </td>
 <td style="text-align:left;">
 Major Cities
@@ -8557,7 +8585,7 @@ Major Cities
 remoteness_class
 </td>
 <td style="text-align:left;">
-Country
+Metro
 </td>
 <td style="text-align:left;">
 Metro
@@ -8568,10 +8596,10 @@ Metro
 sua_code
 </td>
 <td style="text-align:left;">
-3015
+3001
 </td>
 <td style="text-align:left;">
-1009
+3006
 </td>
 </tr>
 <tr>
@@ -8579,10 +8607,10 @@ sua_code
 sua_name
 </td>
 <td style="text-align:left;">
-Toowoomba
+Brisbane
 </td>
 <td style="text-align:left;">
-Central Coast
+Gold Coast - Tweed Heads
 </td>
 </tr>
 <tr>
@@ -8590,10 +8618,10 @@ Central Coast
 gccsa_code
 </td>
 <td style="text-align:left;">
-3RQLD
+3GBRI
 </td>
 <td style="text-align:left;">
-1GSYD
+3RQLD
 </td>
 </tr>
 <tr>
@@ -8601,10 +8629,10 @@ gccsa_code
 gccsa_name
 </td>
 <td style="text-align:left;">
-Rest of Qld
+Greater Brisbane
 </td>
 <td style="text-align:left;">
-Greater Sydney
+Rest of Qld
 </td>
 </tr>
 <tr>
@@ -8612,10 +8640,10 @@ Greater Sydney
 sa1_code
 </td>
 <td style="text-align:left;">
-3145034
+3136512
 </td>
 <td style="text-align:left;">
-1104718
+3123841
 </td>
 </tr>
 <tr>
@@ -8623,10 +8651,10 @@ sa1_code
 sa2_code
 </td>
 <td style="text-align:left;">
-31450
+31365
 </td>
 <td style="text-align:left;">
-11047
+31238
 </td>
 </tr>
 <tr>
@@ -8634,10 +8662,10 @@ sa2_code
 sa2_name
 </td>
 <td style="text-align:left;">
-Highfields
+Caboolture
 </td>
 <td style="text-align:left;">
-Chittaway Bay - Tumbi Umbi
+Labrador
 </td>
 </tr>
 <tr>
@@ -8645,10 +8673,10 @@ Chittaway Bay - Tumbi Umbi
 sa3_code
 </td>
 <td style="text-align:left;">
-31701
+31302
 </td>
 <td style="text-align:left;">
-10202
+30903
 </td>
 </tr>
 <tr>
@@ -8656,10 +8684,10 @@ sa3_code
 sa3_name
 </td>
 <td style="text-align:left;">
-Toowoomba
+Caboolture
 </td>
 <td style="text-align:left;">
-Wyong
+Gold Coast - North
 </td>
 </tr>
 <tr>
@@ -8667,10 +8695,10 @@ Wyong
 sa4_code
 </td>
 <td style="text-align:left;">
-317
+313
 </td>
 <td style="text-align:left;">
-102
+309
 </td>
 </tr>
 <tr>
@@ -8678,10 +8706,10 @@ sa4_code
 sa4_name
 </td>
 <td style="text-align:left;">
-Toowoomba
+Moreton Bay - North
 </td>
 <td style="text-align:left;">
-Central Coast
+Gold Coast
 </td>
 </tr>
 <tr>
@@ -8689,10 +8717,10 @@ Central Coast
 date_first_open
 </td>
 <td style="text-align:left;">
-2004-01-21
+2000-03-01
 </td>
 <td style="text-align:left;">
-1997-01-02
+1994-11-01
 </td>
 </tr>
 <tr>
@@ -8882,7 +8910,7 @@ eid
 period_outlet_id
 </td>
 <td style="text-align:left;">
-20150901012617845
+20151001012617845
 </td>
 </tr>
 <tr>
@@ -8930,7 +8958,7 @@ brick_id
 period_id
 </td>
 <td style="text-align:left;">
-2015090101
+2015100101
 </td>
 </tr>
 <tr>
@@ -8946,7 +8974,7 @@ banner_state_id
 sellin_amount
 </td>
 <td style="text-align:left;">
-190630
+286955
 </td>
 </tr>
 <tr>
@@ -9479,8 +9507,8 @@ Week
 <p>The diagram <a href="#fig:iriprocess">6</a> shows the overall process flow of IQVIA and IRI data integration.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="figure"><span id="fig:iriprocess"></span>
-<div id="htmlwidget-8a2bd1edbcd4fbe42ff5" style="width:500px;height:850px;" class="DiagrammeR html-widget"></div>
-<script type="application/json" data-for="htmlwidget-8a2bd1edbcd4fbe42ff5">{"x":{"diagram":"\n    graph TB\n    A((IQVIA <p> Data))-- Non-IRI Panel -->B[NIP Data]\n    A-- IRI Panel Only -->C[IPO Data]\n    C-- No IRI Data -->D[IPO ALL IQVIA]\n    D-- Set IPO Baner <p> State ID to -999 -->E[IPO IQVIA Other]\n    C-- Has IRI Data -->F[IPO IQVIA + IRI]\n    G((IRI Data))-->F\n    F-->H>Apply IRI <p> Data Process]\n    H-- Product not in IRI -->I[IPO IQVIA Projected]\n    H-- Propduct in IRI -->J[IPO_IRI]\n    J-- Brick Value Allocation --> O[IPO_IRI Brick]\n    I-- Set IPO Baner <p> State ID to -999 -->K[IPO Other]\n    O-->L[IPO_Combined]\n    K-->L\n    E-.->M>Pick the Data based <p> on IRI Subscription]\n    L-.->M\n    B-->N(IQVIA & IRI Integrated Data)\n    M-->N\n \n    style A fill:#0EC8F1,stroke:#333,stroke-width:4px;\n    style B fill:#0EC8F1,stroke:#333,stroke-width:2px;\n    style C fill:#0EC8F1,stroke:#333,stroke-width:4px;\n    style D fill:#0EF1EE;\n    style E fill:#0EF1EE;\n    style F fill:#0EF1EE;\n    style G fill:#F18D0E,stroke:#333,stroke-width:4px;\n    style H fill:#F1EA0E,stroke:#333,stroke-width:2px;\n    style I fill:#0EF1EE,stroke:#333,stroke-width:2px;\n    style J fill:#F18D0E,stroke:#333,stroke-width:2px;\n    style K fill:#0EF1EE,stroke:#333,stroke-width:2px;\n    style L fill:#F18D0E,stroke:#333,stroke-width:2px;\n    style M fill:#F18D0E,stroke:#333,stroke-width:2px;\n    style O fill:#F18D0E,stroke:#333,stroke-width:2px;\n    style N fill:#0EC8F1,stroke:#333,stroke-width:4px;\n    "},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-e5820c99c1978095ada1" style="width:500px;height:850px;" class="DiagrammeR html-widget"></div>
+<script type="application/json" data-for="htmlwidget-e5820c99c1978095ada1">{"x":{"diagram":"\n    graph TB\n    A((IQVIA <p> Data))-- Non-IRI Panel -->B[NIP Data]\n    A-- IRI Panel Only -->C[IPO Data]\n    C-- No IRI Data -->D[IPO ALL IQVIA]\n    D-- Set IPO Baner <p> State ID to -999 -->E[IPO IQVIA Other]\n    C-- Has IRI Data -->F[IPO IQVIA + IRI]\n    G((IRI Data))-->F\n    F-->H>Apply IRI <p> Data Process]\n    H-- Product not in IRI -->I[IPO IQVIA Projected]\n    H-- Propduct in IRI -->J[IPO_IRI]\n    J-- Brick Value Allocation --> O[IPO_IRI Brick]\n    I-- Set IPO Baner <p> State ID to -999 -->K[IPO Other]\n    O-->L[IPO_Combined]\n    K-->L\n    E-.->M>Pick the Data based <p> on IRI Subscription]\n    L-.->M\n    B-->N(IQVIA & IRI Integrated Data)\n    M-->N\n \n    style A fill:#0EC8F1,stroke:#333,stroke-width:4px;\n    style B fill:#0EC8F1,stroke:#333,stroke-width:2px;\n    style C fill:#0EC8F1,stroke:#333,stroke-width:4px;\n    style D fill:#0EF1EE;\n    style E fill:#0EF1EE;\n    style F fill:#0EF1EE;\n    style G fill:#F18D0E,stroke:#333,stroke-width:4px;\n    style H fill:#F1EA0E,stroke:#333,stroke-width:2px;\n    style I fill:#0EF1EE,stroke:#333,stroke-width:2px;\n    style J fill:#F18D0E,stroke:#333,stroke-width:2px;\n    style K fill:#0EF1EE,stroke:#333,stroke-width:2px;\n    style L fill:#F18D0E,stroke:#333,stroke-width:2px;\n    style M fill:#F18D0E,stroke:#333,stroke-width:2px;\n    style O fill:#F18D0E,stroke:#333,stroke-width:2px;\n    style N fill:#0EC8F1,stroke:#333,stroke-width:4px;\n    "},"evals":[],"jsHooks":[]}</script>
 <p class="caption">
 Figure 6: IRI Data Brick Level Data REEngineering flowchart
 </p>
@@ -9490,10 +9518,10 @@ Figure 6: IRI Data Brick Level Data REEngineering flowchart
 <p>IRI sales data is fed at banner state level. It has the different granular of geography with IQVIA data. A reverse engineering process is established to reallocate banner state level sales data down to banner brick level as in the flow chart Figure <a href="#fig:irireverse">7</a>:</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="figure"><span id="fig:irireverse"></span>
-<div id="htmlwidget-e10a2ecda4cf89b31210" style="width:500px;height:800px;" class="DiagrammeR html-widget"></div>
-<script type="application/json" data-for="htmlwidget-e10a2ecda4cf89b31210">{"x":{"diagram":"\n    graph TB\n    A((IRI <p> Data))-- Get Banner_State+FCC -->B[IRI Unique BS + FCC]\n    C(IQVIA Data IB)-- Inner Join -->B\n    B-- Calc. MAT Brick <p> FCC Contr.% -->D[MAT, BS+FCC <p> Contr. %, Brick Count]\n    B-- Calc. MAT Brick <p> CHC3 Contr.% -->E[MAT, BS+CHC3 <p> Contr. %,Brick Count]\n    B-- Calc. MAT Brick <p> Tot Cat Contr.% -->F[MAT, BS+Tot. Cat. <p> Contr. %,Brick Count]\n    D-->G{FCC Brick <p> Count}\n    E-->H\n    F-->I\n    G-- If <= 3 -->H{CHC3 Brick <p> Count}\n    G-. If > 3 .->J[Use the Contri %]\n    H-. if > 3 .->J\n    H-- If <= 3 -->I{Tot. Cat <p> Brick Count}\n    I-. If > 3 .-J\n    A-- Apply the Brick Ratio -->J\n    J-- Apply Ratio on State Value -->K(IRI Brick Data)\n \n    style A fill:#F18D0E,stroke:#333,stroke-width:4px;\n    style B fill:#F1C80E,stroke:#333,stroke-width:2px;\n    style C fill:#0EC8F1,stroke:#333,stroke-width:4px;\n    style D fill:#0EF1EE;\n    style E fill:#0EF1EE;\n    style F fill:#0EF1EE;\n    style G fill:#F1EA0E,stroke:#333,stroke-width:2px;\n    style H fill:#F1EA0E,stroke:#333,stroke-width:2px;\n    style I fill:#F1EA0E,stroke:#333,stroke-width:2px;\n    style J fill:#1aff1a,stroke:#333,stroke-width:2px;\n    style K fill:#F18D0E,stroke:#333,stroke-width:4px;\n    "},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-65257a133d5c9889fcbe" style="width:500px;height:800px;" class="DiagrammeR html-widget"></div>
+<script type="application/json" data-for="htmlwidget-65257a133d5c9889fcbe">{"x":{"diagram":"\n    graph TB\n    A((IRI <p> Data))-- Get Banner_State+FCC -->B[IRI Unique BS + FCC]\n    C(IQVIA Data IB)-- Inner Join -->B\n    B-- Calc. MAT Brick <p> FCC Contr.% -->D[MAT, BS+FCC <p> Contr. %, Brick Count]\n    B-- Calc. MAT Brick <p> CHC3 Contr.% -->E[MAT, BS+CHC3 <p> Contr. %,Brick Count]\n    B-- Calc. MAT Brick <p> Tot Cat Contr.% -->F[MAT, BS+Tot. Cat. <p> Contr. %,Brick Count]\n    D-->G{FCC Brick <p> Count}\n    E-->H\n    F-->I\n    G-- If <= 3 -->H{CHC3 Brick <p> Count}\n    G-. If > 3 .->J[Use the Contri %]\n    H-. if > 3 .->J\n    H-- If <= 3 -->I{Tot. Cat <p> Brick Count}\n    I-. If > 3 .-J\n    A-- Apply the Brick Ratio -->J\n    J-- Apply Ratio on State Value -->K(IRI Brick Data)\n \n    style A fill:#F18D0E,stroke:#333,stroke-width:4px;\n    style B fill:#F1C80E,stroke:#333,stroke-width:2px;\n    style C fill:#0EC8F1,stroke:#333,stroke-width:4px;\n    style D fill:#0EF1EE;\n    style E fill:#0EF1EE;\n    style F fill:#0EF1EE;\n    style G fill:#F1EA0E,stroke:#333,stroke-width:2px;\n    style H fill:#F1EA0E,stroke:#333,stroke-width:2px;\n    style I fill:#F1EA0E,stroke:#333,stroke-width:2px;\n    style J fill:#1aff1a,stroke:#333,stroke-width:2px;\n    style K fill:#F18D0E,stroke:#333,stroke-width:4px;\n    "},"evals":[],"jsHooks":[]}</script>
 <p class="caption">
-Figure 7: IRI Data Brick Level Data REEngineering flowchart
+Figure 7: IRI Data Brick Level Data Reengineering flowchart
 </p>
 </div>
 </div>
@@ -9513,8 +9541,8 @@ Figure 7: IRI Data Brick Level Data REEngineering flowchart
 <p>This process sequence is depicted as in the Figure <a href="#fig:iriintseq">8</a>.</p>
 <div class="layout-chunk" data-layout="l-screen-insert">
 <div class="figure"><span id="fig:iriintseq"></span>
-<div id="htmlwidget-cadcbfa731debd2d8b82" style="width:624px;height:576px;" class="DiagrammeR html-widget"></div>
-<script type="application/json" data-for="htmlwidget-cadcbfa731debd2d8b82">{"x":{"diagram":"\nsequenceDiagram\n  participant A as Start Date\n  participant B as PL Data Cutoff Date\n  participant C as End Date\n  A->>B:IQVIA PL Data\n  B->>C:IRI PL Data\n  Note right of B: IRI PL Data\n  B->>C: Apply Brick Sales Allocation logic\n  B->>C:Get the list of IRI Products\n  B-->>C:Check IQVIA Projected PL Data\n  B-->>C:Drop product Sales already in IRI\n  B-->>C: Change Banner State to Other for SKUs Not in IRI\n  Note right of B: IQVIA Other Banner\n  Note right of A: IQVIA PL Data\n  B->>A: Keep Sales for any SKUs in IRI definition\n  B->>A: Change Banner State to Other for SKUs Not in IRI\n  Note right of A: IQVIA PL Data\n  Note right of A: IQVIA Other Banner\n"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-aafc98335076306c74fa" style="width:624px;height:576px;" class="DiagrammeR html-widget"></div>
+<script type="application/json" data-for="htmlwidget-aafc98335076306c74fa">{"x":{"diagram":"\nsequenceDiagram\n  participant A as Start Date\n  participant B as PL Data Cutoff Date\n  participant C as End Date\n  A->>B:IQVIA PL Data\n  B->>C:IRI PL Data\n  Note right of B: IRI PL Data\n  B->>C: Apply Brick Sales Allocation logic\n  B->>C:Get the list of IRI Products\n  B-->>C:Check IQVIA Projected PL Data\n  B-->>C:Drop product Sales already in IRI\n  B-->>C: Change Banner State to Other for SKUs Not in IRI\n  Note right of B: IQVIA Other Banner\n  Note right of A: IQVIA PL Data\n  B->>A: Keep Sales for any SKUs in IRI definition\n  B->>A: Change Banner State to Other for SKUs Not in IRI\n  Note right of A: IQVIA PL Data\n  Note right of A: IQVIA Other Banner\n"},"evals":[],"jsHooks":[]}</script>
 <p class="caption">
 Figure 8: Data model usage flowchart
 </p>
@@ -10040,9 +10068,11 @@ return 0;</code></pre>
 <li>When category is involved then the context should be aware of the category</li>
 </ol>
 <h2 id="evolution-index-metric-calculation-consideration">Evolution Index Metric Calculation Consideration</h2>
-<ol type="1">
-<li></li>
-</ol>
+<h1 id="iri-data-is-client-specific">IRI Data is Client Specific</h1>
+<p>IRI data is client specific. For the same category, say Multiple Vitamins, each client might buy a subset of SKUs from IRI for the banner Priceline, Good Price or National Pharmacy. For instance, Bayer CH buys 3000 SKUs while Sanofi buys 3600 SKUs. Currently, each client is processed differently.</p>
+<p>The same is for the Grocery data.</p>
+<p>Our initial PBI architect is client specific, there will be no issue for client specific workspace to take care of the client specific subscriptions to Grocery and IRI data. However, if we want to convert our current model to row-level security model, then it is a different story. we will need to convert the Grocery and IRI fact data to be client specific. This needs a fundamental data model change not just the row-level security set up.</p>
+<p>There will be mnore time to make this change and test it.</p>
 <!--radix_placeholder_article_footer-->
 <!--/radix_placeholder_article_footer-->
 </div>

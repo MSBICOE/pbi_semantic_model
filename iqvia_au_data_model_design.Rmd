@@ -848,7 +848,7 @@ mermaid("
 
 IRI sales data is fed at banner state level. It has the different granular of geography with IQVIA data. A reverse engineering process is established to reallocate banner state level sales data down to banner brick level as in the flow chart Figure \@ref(fig:irireverse):
 
-```{r irireverse, fig.cap="IRI Data Brick Level Data REEngineering flowchart", , fig.height=13, fig.width=6}
+```{r irireverse, fig.cap="IRI Data Brick Level Data Reengineering flowchart", , fig.height=13, fig.width=6}
 library(DiagrammeR)
 mermaid("
     graph TB
@@ -1467,7 +1467,17 @@ parent contribution will need to use the excel feature.
 
 ## Evolution Index Metric Calculation Consideration
 
-1. 
+
+
+# IRI Data is Client Specific
+
+IRI data is client specific. For the same category, say Multiple Vitamins, each client might buy a subset of SKUs from IRI for the banner Priceline, Good Price or National Pharmacy. For instance, Bayer CH buys 3000 SKUs while Sanofi buys 3600 SKUs. Currently, each client is processed differently.
+
+The same is for the Grocery data.
+
+Our initial PBI architect is client specific, there will be no issue for client specific workspace to take care of the client specific subscriptions to Grocery and IRI data. However, if we want to convert our current model to row-level security model, then it is a different story. we will need to convert the Grocery and IRI fact data to be client specific. This needs a fundamental data model change not just the row-level security set up.
+
+There will be mnore time to make this change and test it.
 
 
 

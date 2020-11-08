@@ -1,0 +1,35 @@
+{
+  "name": "SemanticModel",
+  "compatibilityLevel": 1500,
+  "model": {
+    "culture": "en-AU",
+    "dataSources": [
+      {
+        "type": "structured",
+        "name": "SQL/sqletl02d int miportal com;iqviaau_reporting_db",
+        "connectionDetails": {
+          "protocol": "tds",
+          "address": {
+            "server": "sqletl02d.int.miportal.com",
+            "database": "iqviaau_reporting_db"
+          },
+          "authentication": null,
+          "query": null
+        },
+        "options": {},
+        "credential": {
+          "AuthenticationKind": "UsernamePassword",
+          "Username": "iqviaau_reporting_db_user",
+          "EncryptConnection": false
+        }
+      }
+    ],
+    "annotations": [
+      {
+        "name": "ClientCompatibilityLevel",
+        "value": "600"
+      }
+    ]
+  },
+  "id": "SemanticModel"
+}
